@@ -1,0 +1,88 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)"
+    ],
+    "deny": [
+      ".env",
+      ".env.*",
+      "**/*.key",
+      "**/*.pem",
+      "Secrets/**",
+      "Credentials/**",
+      ".git/**"
+    ]
+  },
+  "environmentVariables": {
+    "NODE_ENV": "development"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|MultiEdit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claudekit-hooks run file-guard"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claudekit-hooks run typecheck-changed"
+          },
+          {
+            "type": "command",
+            "command": "claudekit-hooks run lint-changed"
+          },
+          {
+            "type": "command",
+            "command": "claudekit-hooks run check-any-changed"
+          },
+          {
+            "type": "command",
+            "command": "claudekit-hooks run test-changed"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claudekit-hooks run create-checkpoint"
+          },
+          {
+            "type": "command",
+            "command": "claudekit-hooks run check-todos"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claudekit-hooks run thinking-level"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [],
+    "SessionStart": []
+  }
+}

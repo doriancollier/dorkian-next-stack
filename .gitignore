@@ -1,0 +1,42 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next.js
+.next/
+out/
+
+# environment
+.env
+.env*.local
+
+# prisma
+src/generated/
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+coverage/
+
+# ide
+.idea/
+
+# Dev server logs
+.logs/
+
+# temp
+.temp/
+
+# roadmap server runtime files
+roadmap/.server.pid
+roadmap/.server.port.claude/projects/
