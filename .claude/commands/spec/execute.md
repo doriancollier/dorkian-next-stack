@@ -760,6 +760,53 @@ For each task, follow this cycle:
 **Available Agents:**
 !`claudekit list agents`
 
+#### Background Agent Orchestration (Parallel Execution)
+
+For tasks that can run in parallel (no dependencies), use background agents to maximize efficiency:
+
+**When to use background agents:**
+- Multiple independent tasks in the same phase
+- Long-running implementation while continuing with other work
+- Code review running while you prepare next task
+
+**Pattern: Launch multiple agents in background, collect results later:**
+
+```
+# Step 1: Launch agents in background (returns immediately)
+Task tool:
+- description: "Implement ComponentA"
+- subagent_type: react-tanstack-expert
+- run_in_background: true  # <-- Background execution
+- prompt: |
+    Implement ComponentA...
+# Returns task_id_1 immediately
+
+Task tool:
+- description: "Implement ComponentB"
+- subagent_type: prisma-expert
+- run_in_background: true
+- prompt: |
+    Implement ComponentB...
+# Returns task_id_2 immediately
+
+# Step 2: Continue with other work while agents execute
+# (e.g., update todos, prepare test strategy, review spec)
+
+# Step 3: Collect results when ready
+TaskOutput:
+- task_id: [task_id_1]
+- block: true  # Wait for completion
+
+TaskOutput:
+- task_id: [task_id_2]
+- block: true
+```
+
+**When NOT to use background agents:**
+- Sequential tasks with dependencies (B needs A's output)
+- When you need immediate feedback to decide next steps
+- Single-task execution
+
 #### Step 1: Implement
 
 Launch appropriate specialist agent with cross-session context:

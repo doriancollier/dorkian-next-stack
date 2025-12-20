@@ -732,6 +732,44 @@ python3 roadmap/scripts/find_by_title.py "<title-query>"
 - Use `/roadmap enrich` to populate context before ideation
 - Run `/roadmap validate` after manual edits to roadmap.json
 
+### Background Agents (async execution)
+
+Agents can run in the background using `run_in_background: true` on the Task tool, allowing the main conversation to continue while agents work.
+
+**When to use background agents:**
+
+| Scenario | Why Background? |
+|----------|-----------------|
+| Research while implementing | Research doesn't block coding |
+| Parallel analysis | Multiple reviewers work simultaneously |
+| Long-running tasks | Test suites, builds, documentation generation |
+| Multi-agent orchestration | Start all agents, continue with prep work |
+
+**Syntax:**
+```
+# Launch background agent
+Task(
+  description="Research patterns",
+  prompt="...",
+  subagent_type="research-expert",
+  run_in_background=true
+)
+# Returns task_id immediately
+
+# Retrieve results later
+TaskOutput(task_id="<task-id>", block=true)
+```
+
+**Key patterns:**
+- Use `run_in_background: true` for tasks that don't need immediate results
+- Use `TaskOutput` with `block: true` to wait for completion
+- Use `TaskOutput` with `block: false` to check status without waiting
+- Background agents have isolated context (by design)
+
+**Commands using background agents:**
+- `/spec:execute` — Implementation agents run in background
+- `/ideate` — Research runs in background while drafting
+
 ### Hooks (automatic validation)
 
 - **PreToolUse**: File guard protection

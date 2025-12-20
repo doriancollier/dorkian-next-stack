@@ -117,11 +117,43 @@ If the task is a bug fix for existing functionality:
 
 Record under **Root Cause Analysis**.
 
-### Step 5: Research
+### Step 5: Research (Background Agent)
 
-1. Consult the research-expert agent to conduct comprehensive research into potential solutions to the task
-2. Consider which potential solutions are most appropriate for this code base by exploring the local repo further if necessary
-3. Summarize the most promising potential approaches, the pros and cons of each, and an ultimate recommendation.
+**Launch research in background** to continue codebase exploration while research runs:
+
+```
+Task tool:
+- description: "Research solutions for [task-brief]"
+- subagent_type: research-expert
+- run_in_background: true  # <-- Continue working while research runs
+- prompt: |
+    Research potential solutions for: [task brief]
+
+    Focus on:
+    - Industry best practices
+    - Similar implementations in popular libraries
+    - Trade-offs between approaches
+    - Security and performance considerations
+
+    Return structured findings with pros/cons of each approach.
+```
+
+**While research runs in background:**
+1. Continue Step 3 codebase exploration if not complete
+2. Draft initial Intent & Assumptions section
+3. Identify any clarification questions (Step 6)
+
+**When ready, collect research results:**
+```
+TaskOutput:
+- task_id: [task_id from above]
+- block: true  # Wait for research to complete
+```
+
+**Then synthesize:**
+1. Consider which potential solutions are most appropriate for this codebase
+2. Summarize the most promising approaches, pros/cons of each
+3. Provide an ultimate recommendation
 
 Record findings under **Research Findings**
 
