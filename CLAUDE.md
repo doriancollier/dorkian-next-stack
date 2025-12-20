@@ -134,6 +134,51 @@ grep -i error .logs/*.log
 2. **Required output** - Must specify `output = "../src/generated/prisma"`
 3. **Import path** - Import from `@/generated/prisma` (not `@prisma/client`)
 
+## Library Documentation (Context7)
+
+When working with external libraries, use Context7 MCP tools for up-to-date documentation. This prevents using outdated patterns from training data.
+
+### When to Use
+
+- Implementing features with library APIs you're uncertain about
+- Debugging library-specific issues
+- Working with recently-updated libraries (Next.js 16, Prisma 7, Zod 4, TanStack Query 5, etc.)
+- Before making assumptions about current API patterns
+
+### Workflow
+
+1. **Check installed version**: `grep '"[library]"' package.json`
+2. **Resolve library ID**: `mcp__context7__resolve-library-id: { libraryName: "[library]" }`
+3. **Fetch focused docs**: `mcp__context7__get-library-docs` with specific `topic`
+
+### Token Efficiency
+
+Always use the `topic` parameter to request specific information — avoid broad requests:
+
+| Instead of | Request |
+|------------|---------|
+| "All Prisma docs" | `topic: "findMany with relations and filtering"` |
+| "TanStack Query documentation" | `topic: "useMutation with optimistic updates"` |
+| "Next.js 16 features" | `topic: "async params in page components"` |
+| "Zod validation" | `topic: "discriminatedUnion for form schemas"` |
+
+### Example
+
+```
+# 1. Check version
+grep '"prisma"' package.json
+# Output: "prisma": "^7.0.0"
+
+# 2. Resolve library
+mcp__context7__resolve-library-id: { libraryName: "prisma" }
+
+# 3. Fetch focused docs
+mcp__context7__get-library-docs: {
+  context7CompatibleLibraryID: "/prisma/prisma",
+  topic: "findMany with include and where clauses"
+}
+```
+
 ## Code Conventions
 
 - **Components**: PascalCase (`ExampleForm.tsx`)

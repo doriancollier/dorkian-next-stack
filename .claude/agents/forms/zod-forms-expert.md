@@ -4,7 +4,7 @@ description: >-
   Zod 4 validation and React Hook Form expert for type-safe forms with Shadcn UI.
   Use PROACTIVELY when creating forms, validation schemas, or integrating
   form handling with server actions.
-tools: Read, Edit, Bash, Grep, Glob
+tools: Read, Edit, Bash, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: sonnet
 category: forms
 displayName: Zod + Forms

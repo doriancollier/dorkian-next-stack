@@ -9,6 +9,34 @@ This skill provides **implementation patterns** for the Calm Tech design system 
 
 **For design thinking (what/why)**: Use the `designing-frontend` skill.
 
+## Current Documentation (Context7)
+
+Tailwind v4 uses CSS-first configuration (no `tailwind.config.js`). For current patterns:
+
+```
+# Check installed version
+grep '"tailwindcss"' package.json
+
+# Fetch Tailwind v4 docs
+mcp__context7__resolve-library-id: { libraryName: "tailwindcss" }
+mcp__context7__get-library-docs: {
+  context7CompatibleLibraryID: "[resolved-id]",
+  topic: "[specific topic, e.g., '@theme directive', 'dark mode', 'custom utilities']"
+}
+
+# Fetch Shadcn docs
+mcp__context7__resolve-library-id: { libraryName: "shadcn" }
+mcp__context7__get-library-docs: {
+  context7CompatibleLibraryID: "[resolved-id]",
+  topic: "[component name, e.g., 'Button', 'Form', 'Dialog']"
+}
+```
+
+**When to fetch docs:**
+- Uncertain about Tailwind v4 CSS-first syntax
+- Adding new Shadcn components
+- Implementing theming or dark mode
+
 ## When to Use
 
 - Writing Tailwind classes for components

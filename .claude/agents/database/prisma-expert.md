@@ -4,7 +4,7 @@ description: >-
   Prisma 7 database expert for schema design, migrations, query optimization,
   and Neon PostgreSQL integration. Use PROACTIVELY when working with database
   operations, schema changes, relations, or type-safe queries.
-tools: Read, Edit, Bash, Grep, Glob, mcp__mcp-dev-db__health, mcp__mcp-dev-db__get_schema_overview, mcp__mcp-dev-db__get_table_details, mcp__mcp-dev-db__execute_sql_select, mcp__mcp-dev-db__explain_query, mcp__mcp-dev-db__validate_sql
+tools: Read, Edit, Bash, Grep, Glob, mcp__mcp-dev-db__health, mcp__mcp-dev-db__get_schema_overview, mcp__mcp-dev-db__get_table_details, mcp__mcp-dev-db__execute_sql_select, mcp__mcp-dev-db__explain_query, mcp__mcp-dev-db__validate_sql, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: sonnet
 category: database
 displayName: Prisma Expert

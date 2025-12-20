@@ -9,6 +9,29 @@ This skill provides **Prisma 7 patterns** specific to this project — schema de
 
 **For complex database operations**: Use the `prisma-expert` agent.
 
+## Current Documentation (Context7)
+
+Prisma 7 has breaking changes from v6. Before implementing queries, fetch current patterns:
+
+```
+# 1. Check installed version
+grep '"prisma"' package.json
+
+# 2. Resolve library
+mcp__context7__resolve-library-id: { libraryName: "prisma" }
+
+# 3. Fetch specific docs (use focused topics to minimize tokens)
+mcp__context7__get-library-docs: {
+  context7CompatibleLibraryID: "[resolved-id]",
+  topic: "[specific query pattern, e.g., 'findMany with relations', 'transactions', 'raw queries']"
+}
+```
+
+**When to fetch docs:**
+- Uncertain about current API syntax
+- Implementing complex queries (nested writes, transactions)
+- Working with features that changed in v7
+
 ## Project Setup
 
 ### Prisma 7 Configuration
