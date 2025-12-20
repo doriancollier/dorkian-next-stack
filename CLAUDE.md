@@ -605,6 +605,7 @@ Direct database access is available via MCP tools for debugging and verification
 
 | Skill | Applies When |
 |-------|--------------|
+| `proactive-clarification` | Vague requests — analyze gaps, ask questions user didn't know to ask |
 | `designing-frontend` | Design thinking — hierarchy, component decisions, Calm Tech philosophy |
 | `styling-with-tailwind-shadcn` | Implementation — Tailwind classes, theming, component specs |
 | `organizing-fsd-architecture` | Feature structure, layer organization |
@@ -822,3 +823,66 @@ TaskOutput(task_id="<task-id>", block=true)
 - **PostToolUse**: Typecheck, lint, check-any, test changed files
 - **UserPromptSubmit**: Adjust thinking level
 - **Stop**: Create checkpoint, check todos
+
+### Plan Mode Behavior
+
+When entering plan mode (via `EnterPlanMode` tool), follow this enhanced workflow that incorporates proactive clarification:
+
+#### Phase 1: Clarifying Questions (Before Exploration)
+
+**Before exploring the codebase**, apply the `proactive-clarification` skill:
+
+1. **Analyze the request** for gaps, ambiguities, and unstated assumptions
+2. **Identify what's missing** that would change your approach:
+   - Unclear scope boundaries
+   - Missing acceptance criteria
+   - Ambiguous requirements
+   - Hidden complexity signals ("just", "simple", "quick")
+3. **Ask 2-4 high-impact questions** using `AskUserQuestion`:
+   - Focus on questions that would change your implementation plan
+   - Suggest reasonable defaults when possible
+   - Explain why each question matters
+4. **Skip this phase** only if the request is genuinely clear and complete
+
+**Example flow:**
+```
+User: "Add user notifications"
+
+Before exploring, ask:
+1. What events should trigger notifications? (new message, mention, system alerts?)
+2. Delivery channels: in-app only, or also email/push?
+3. Should users be able to configure notification preferences?
+
+Then proceed to exploration with clear requirements.
+```
+
+#### Phase 2: Codebase Exploration
+
+With clarified requirements, explore thoroughly:
+- Use Glob, Grep, Read to understand existing patterns
+- Identify files that will be affected
+- Note existing conventions to follow
+- Map dependencies and potential blast radius
+
+#### Phase 3: Design & Present Plan
+
+Present your implementation approach:
+- Reference the clarified requirements from Phase 1
+- Show how your plan addresses each requirement
+- Identify any new questions that emerged during exploration
+- Propose alternatives if trade-offs exist
+
+#### When to Skip Phase 1
+
+Skip clarifying questions when:
+- User provided detailed requirements with clear acceptance criteria
+- Request is a well-defined bug fix with reproduction steps
+- Task is purely exploratory ("how does X work?")
+- User explicitly said "just explore, I'll clarify later"
+
+#### Integration with Existing Workflows
+
+Plan mode with clarification works well before:
+- `/ideate` — Ensures ideation starts with clear scope
+- `/spec:create` — Produces better specifications
+- Major refactoring — Surfaces constraints early
