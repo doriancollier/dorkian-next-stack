@@ -11,8 +11,8 @@ Review Claude Code processes (commands, agents, hooks, configuration) for clarit
 ## Arguments
 
 - `$ARGUMENTS` - Optional area to focus on. If empty, review everything.
-  - Valid areas: `commands`, `agents`, `skills`, `hooks`, `config`, `memory` (CLAUDE.md), `skill-extraction`
-  - Can also specify a specific file or pattern: `git commands`, `database agents`
+  - Valid areas: `commands`, `agents`, `skills`, `rules`, `hooks`, `config`, `memory` (CLAUDE.md), `skill-extraction`
+  - Can also specify a specific file or pattern: `git commands`, `database agents`, `api rules`
   - Special mode: `skill-extraction` - Focus specifically on identifying content that should become Skills
 
 ## Review Scope
@@ -25,6 +25,7 @@ Review Claude Code processes (commands, agents, hooks, configuration) for clarit
 | **Commands** | `/.claude/commands/**/*.md` | Clarity, consistency, functionality |
 | **Agents** | `/.claude/agents/**/*.md` | Purpose clarity, tool access, instructions |
 | **Skills** | `/.claude/skills/**/SKILL.md` | Skill definitions, descriptions, progressive disclosure |
+| **Rules** | `/.claude/rules/*.md` | Path patterns, content relevance, no overlaps |
 | **Hooks** | `/.claude/settings.json` | Hook configuration, lifecycle events |
 | **Developer Guides** | `/developer-guides/*.md` | Patterns, best practices |
 
@@ -49,6 +50,9 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
   # Skills
   find ".claude/skills" -name "SKILL.md" -type f 2>/dev/null || echo "No skills directory"
 
+  # Path-specific rules
+  find ".claude/rules" -name "*.md" -type f 2>/dev/null || echo "No rules directory"
+
   # Developer Guides
   find "developer-guides" -name "*.md" -type f 2>/dev/null || echo "No developer-guides directory"
 
@@ -61,9 +65,10 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
 
 - [ ] **1.3** Report inventory to user:
   ```
-  Found X commands, Y agents, Z skills, W developer guides to review.
+  Found X commands, Y agents, Z skills, W rules, V developer guides to review.
   Hook configuration: [summary]
   Skills directory: [exists/missing]
+  Rules directory: [exists/missing]
   ```
 
 ### Phase 2: Read & Analyze
@@ -330,6 +335,18 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
 - [ ] Located in correct directory: `.claude/skills/[skill-name]/SKILL.md`
 - [ ] Supporting files organized: `reference.md`, `examples.md`, `scripts/`, `templates/`
 
+### For Rules
+- [ ] Has valid YAML frontmatter with `paths:` field
+- [ ] **Paths**: Uses valid glob syntax (`src/**/*.ts`, `__tests__/**/*.tsx`)
+- [ ] **Paths**: Patterns correctly match intended files (test with `ls` or `find`)
+- [ ] **Paths**: No excessive overlap with other rules (check for conflicts)
+- [ ] **Content**: Specific to the file types (not generic guidelines)
+- [ ] **Content**: Includes code examples using project conventions
+- [ ] **Content**: Has "Anti-Patterns" or "Never Do" section
+- [ ] **Naming**: Uses kebab-case, topic-based names (`api.md`, not `src-api.md`)
+- [ ] **Documentation**: Listed in CLAUDE.md "Path-Specific Rules" section
+- [ ] **Relevance**: Content wouldn't fit better in CLAUDE.md, a Skill, or Developer Guide
+
 ### For Hooks
 - [ ] Configured in `.claude/settings.json`
 - [ ] Matches appropriate lifecycle event (PreToolUse, PostToolUse, etc.)
@@ -351,12 +368,16 @@ Check these relationships:
 CLAUDE.md ←→ Commands (are referenced commands accurate?)
 CLAUDE.md ←→ Agents (are referenced agents accurate?)
 CLAUDE.md ←→ Skills (are referenced skills accurate?)
+CLAUDE.md ←→ Rules (are rules listed in "Path-Specific Rules" section?)
 CLAUDE.md ←→ Developer Guides (are references valid?)
 Commands ←→ Agents (do Commands reference Agents that exist?)
 Commands ←→ Skills (do Commands reference Skills that exist?)
 Agents ←→ tools frontmatter (does tool access match agent's purpose?)
 Agents ←→ Skills (is there overlap? Should Agent be Skill?)
 Skills ←→ Developer Guides (is there duplication?)
+Rules ←→ Rules (do path patterns overlap? Is there conflict?)
+Rules ←→ CLAUDE.md (does rule content duplicate CLAUDE.md content?)
+Rules ←→ Developer Guides (is there duplication of patterns?)
 Hooks ←→ Lifecycle events (does hook use appropriate event?)
 ```
 
@@ -380,6 +401,22 @@ Hooks ←→ Lifecycle events (does hook use appropriate event?)
 - Does it have supporting files if needed (reference.md, examples.md)?
 - Is `allowed-tools` appropriately restricted?
 - Does similar content exist in an Agent? (potential duplication)
+
+**For Rules:**
+- Does the `paths:` pattern actually match the intended files?
+  ```bash
+  # Test patterns - should return expected files
+  find . -path "[pattern]" -type f | head -5
+  ```
+- Are there overlapping patterns with other rules?
+  ```bash
+  # Check for potential conflicts
+  grep -l "paths:" .claude/rules/*.md
+  ```
+- Is the content specific enough for those file types?
+- Could this content live in CLAUDE.md instead (if it's project-wide)?
+- Is there duplication with Developer Guides?
+- Are examples using project-specific conventions?
 
 **For Hooks (in settings.json):**
 - Is the lifecycle event correct for the hook's purpose?
@@ -410,13 +447,13 @@ Hooks ←→ Lifecycle events (does hook use appropriate event?)
 
 ### Component Comparison Matrix
 
-| Aspect | Slash Command | Agent | Skill | Hook |
-|--------|---------------|-------|-------|------|
-| **Invocation** | User types `/command` | Tool-invoked via Task | Model-invoked (automatic) | Event-triggered |
-| **Context** | Shared with main conversation | Isolated context window | Shared with main conversation | N/A (scripts) |
-| **Purpose** | Quick actions/workflows | Complex isolated tasks | Reusable expertise | Deterministic behavior |
-| **Location** | `.claude/commands/` | `.claude/agents/` | `.claude/skills/` | `.claude/settings.json` |
-| **When Runs** | User explicitly invokes | Spawned for specific task | Claude decides automatically | At lifecycle events |
+| Aspect | Slash Command | Agent | Skill | Rule | Hook |
+|--------|---------------|-------|-------|------|------|
+| **Invocation** | User types `/command` | Tool-invoked via Task | Model-invoked (automatic) | Path-triggered | Event-triggered |
+| **Context** | Shared with main conversation | Isolated context window | Shared with main conversation | Shared (injected) | N/A (scripts) |
+| **Purpose** | Quick actions/workflows | Complex isolated tasks | Reusable expertise | File-type guidelines | Deterministic behavior |
+| **Location** | `.claude/commands/` | `.claude/agents/` | `.claude/skills/` | `.claude/rules/` | `.claude/settings.json` |
+| **When Runs** | User explicitly invokes | Spawned for specific task | Claude decides automatically | When editing matching files | At lifecycle events |
 
 ### Agents vs Skills: Deep Comparison
 
@@ -604,6 +641,7 @@ When scanning content, look for these signals:
 | **Commands** | `verb` or `noun` | `create`, `validate`, `commit` |
 | **Agents** | `domain-expert` | `typescript-expert`, `database-expert` |
 | **Skills** | `verb-ing-noun` (gerund) | `reviewing-code`, `processing-pdfs` |
+| **Rules** | `topic` (kebab-case) | `api`, `dal`, `security`, `testing`, `components` |
 | **Hooks** | `action-target` | `file-guard`, `lint-changed` |
 
 ### Quick Reference: Component Selection
@@ -616,6 +654,9 @@ Needs isolated context or specific tools? ───────► AGENT
         │
         ▼
 Teaches reusable expertise? ─────────────────────► SKILL
+        │
+        ▼
+Applies only to specific file types/paths? ─────► RULE
         │
         ▼
 Must happen at lifecycle events? ────────────────► HOOK

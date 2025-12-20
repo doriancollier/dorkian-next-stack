@@ -23,6 +23,7 @@ Add new processes, update existing ones, or improve the Claude Code workflow bas
 | **Commands** | `/.claude/commands/[namespace]/[name].md` | New quick actions, workflows (user-invoked) |
 | **Agents** | `/.claude/agents/[category]/[name].md` | Complex multi-step workflows needing isolation (tool-invoked) |
 | **Skills** | `/.claude/skills/[skill-name]/SKILL.md` | Reusable expertise Claude applies automatically (model-invoked) |
+| **Rules** | `/.claude/rules/[topic].md` | Path-specific guidelines that apply to certain file types (path-triggered) |
 | **Hooks** | `/.claude/settings.json` | Automated validation/actions (via ClaudeKit, event-triggered) |
 | **Developer Guides** | `/developer-guides/[name].md` | Detailed patterns and conventions |
 | **Memory** | `/CLAUDE.md` | Core instructions, high-level documentation |
@@ -57,8 +58,11 @@ Execute these steps sequentially. This is an **interactive, research-first** pro
   # Find related agents
   grep -r "[relevant keywords]" ".claude/agents" --include="*.md" -l
 
+  # Find related path-specific rules
+  grep -r "[relevant keywords]" ".claude/rules" --include="*.md" -l
+
   # Check developer guides
-  grep -r "[relevant keywords]" "docs/guides" --include="*.md" -l
+  grep -r "[relevant keywords]" "developer-guides" --include="*.md" -l
   ```
 
 - [ ] **2.3** Read related files to understand:
@@ -303,6 +307,59 @@ For detailed information, see: `reference.md`
 └── templates/        # Optional: Template files
 ```
 
+**Rule Template (Path-Specific):**
+```markdown
+---
+paths: [glob patterns for files this rule applies to]
+---
+
+# [Topic] Rules
+
+These rules apply to [description of what files/patterns].
+
+## Required Patterns
+
+### [Pattern Category]
+
+[Description and code examples]
+
+```typescript
+// Example code showing the pattern
+```
+
+## Anti-Patterns (Never Do)
+
+```typescript
+// NEVER do this
+[bad pattern]  // Wrong
+
+// Do this instead
+[good pattern]  // Correct
+```
+
+## Checklist
+
+- [ ] [Verification item 1]
+- [ ] [Verification item 2]
+```
+
+**Rule Naming Conventions:**
+- Use kebab-case: `api.md`, `dal.md`, `security.md`, `testing.md`
+- Name by topic, not by path: `components.md` not `src-components.md`
+- Keep names concise and descriptive
+
+**Rule Path Patterns:**
+- Use glob syntax: `src/**/*.ts`, `__tests__/**/*.tsx`
+- Multiple patterns: `src/app/api/**/*.ts, src/layers/**/api/**/*.ts`
+- Wildcards: `**/auth/**`, `**/login/**` (for security-related anywhere)
+
+**When to Create a Rule vs Other Types:**
+- Guidelines apply ONLY to specific file types → **Rule**
+- Guidelines apply to ALL code → **CLAUDE.md**
+- User needs explicit control → **Command**
+- Task needs isolation/execution → **Agent**
+- Reusable expertise, auto-activated → **Skill**
+
 - [ ] **4.3** After creating/modifying process files, update CLAUDE.md if:
   - The change introduces a significant new pattern
   - The change affects core project conventions
@@ -445,6 +502,7 @@ Understanding HOW each component is invoked is critical for choosing the right f
 | User wants explicit control over execution | Command | User-invoked via `/command` |
 | Complex task needs isolation/separate context | Agent | Tool-invoked via Task tool |
 | Reusable expertise Claude applies automatically | Skill | Model-invoked when relevant |
+| Guidelines for specific file types/paths | Rule | Path-triggered when editing matching files |
 | Deterministic behavior at lifecycle events | Hook | Event-triggered automatically |
 | Detailed patterns for developers | Developer Guide | Reference documentation |
 
@@ -465,6 +523,29 @@ Understanding HOW each component is invoked is critical for choosing the right f
 **Key Test:** Does it TEACH or EXECUTE?
 - TEACH (how to approach) → **Skill**
 - EXECUTE (run tasks) → **Agent**
+
+### Rules vs CLAUDE.md vs Skills
+
+**Create a RULE when:**
+- Guidelines apply ONLY to specific file patterns (e.g., `src/app/api/**/*.ts`)
+- Content would clutter CLAUDE.md but is important for those file types
+- Different files need different guidelines (e.g., API routes vs components)
+- You want automatic context injection when editing matching files
+
+**Keep in CLAUDE.md when:**
+- Guidelines apply to ALL files in the project
+- It's core project architecture or conventions
+- It's high-level documentation needed in every context
+
+**Create a SKILL when:**
+- Expertise is reusable across many projects
+- Claude should apply it automatically based on task type (not file type)
+- Content teaches methodology, not file-specific patterns
+
+**Key Test:** Does it apply to specific FILE TYPES or specific TASK TYPES?
+- Specific files/paths → **Rule**
+- Specific task categories → **Skill**
+- Everything → **CLAUDE.md**
 
 ### Choosing Location
 
@@ -518,7 +599,7 @@ Understanding HOW each component is invoked is critical for choosing the right f
 Before presenting changes for approval:
 
 - [ ] Follows existing naming conventions
-- [ ] Uses appropriate file type for the need (Command vs Agent vs Skill)
+- [ ] Uses appropriate file type for the need (Command vs Agent vs Skill vs Rule)
 - [ ] Has complete YAML frontmatter
 - [ ] Includes clear instructions/documentation
 - [ ] Handles edge cases
@@ -531,6 +612,14 @@ Before presenting changes for approval:
 - [ ] Description includes "Use when..." phrase
 - [ ] SKILL.md under 500 lines (progressive disclosure)
 - [ ] Supporting files organized in skill directory
+
+**Additional checks for Rules:**
+- [ ] `paths:` frontmatter uses valid glob patterns
+- [ ] Patterns don't overlap excessively with other rules
+- [ ] Rule content is specific to the file types (not generic)
+- [ ] Anti-patterns section included
+- [ ] Examples use project conventions
+- [ ] Rule documented in CLAUDE.md "Path-Specific Rules" section
 
 ## Edge Cases
 

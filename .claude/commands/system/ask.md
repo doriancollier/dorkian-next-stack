@@ -24,6 +24,11 @@ Search these sources to find the relevant process:
 **Developer guides**:
 - Check `developer-guides/` for detailed implementation patterns and best practices
 
+**Path-specific rules**:
+- Check `.claude/rules/` for contextual rules that apply to specific file patterns
+- Rules have `paths:` frontmatter specifying which files trigger them
+- Include: `api.md`, `dal.md`, `security.md`, `testing.md`, `components.md`
+
 **Available slash commands**:
 - List all commands in `.claude/commands/` directory
 
@@ -71,6 +76,7 @@ Based on the question, read the relevant documentation files to understand:
 - What CLAUDE.md says about conventions
 - What agents can assist with specialized tasks
 - What skills are available for specialized capabilities
+- What path-specific rules apply (if question relates to specific file types)
 
 ### 4. Identify the Best Approaches
 
@@ -159,6 +165,7 @@ Based on similar patterns, here's how you might approach this:
 Would you like me to create a defined process for this? This would:
 - Add documentation to CLAUDE.md
 - Create a slash command (if appropriate)
+- Create a path-specific rule (if file-type specific)
 - Establish a consistent workflow
 
 **Options:**
@@ -215,6 +222,13 @@ When explaining processes, clarify the invocation model:
 - Events: SessionStart, PreToolUse, PostToolUse, UserPromptSubmit, Stop
 - Use when: Behavior must happen at specific points
 
+**Path-Specific Rules (Path-Triggered):**
+- Automatically loaded when Claude works with matching files
+- Located in `.claude/rules/*.md` with `paths:` YAML frontmatter
+- Example: `api.md` with `paths: src/app/api/**/*.ts`
+- Use when: Guidelines apply only to specific file types/paths
+- Location: `.claude/rules/[topic].md`
+
 ### Choosing Between Agents and Skills
 
 | Criteria | Use Agent | Use Skill |
@@ -235,6 +249,7 @@ When explaining processes, clarify the invocation model:
 - **For Agents**: Mention they're spawned via Task tool for isolated execution
 - **For Skills**: Explain they're invoked via Skill tool for domain expertise
 - **For Hooks**: Explain which lifecycle event triggers them
+- **For Rules**: Explain which file patterns trigger them and what guidance they provide
 
 ## Important Notes
 

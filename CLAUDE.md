@@ -612,6 +612,52 @@ Direct database access is available via MCP tools for debugging and verification
 | `working-with-prisma` | Database work — schema design, DAL patterns, queries |
 | `managing-roadmap-moscow` | Roadmap work — MoSCoW prioritization, roadmap utilities |
 
+### Path-Specific Rules
+
+Contextual rules that apply when working with specific file patterns. Rules are defined in `.claude/rules/` with YAML frontmatter specifying which paths trigger them.
+
+| Rule File | Applies To | Content |
+|-----------|------------|---------|
+| `api.md` | `src/app/api/**/*.ts` | API route handlers — validation, error handling, DAL usage |
+| `dal.md` | `src/layers/entities/*/api/**/*.ts`, `src/layers/shared/api/**/*.ts` | DAL functions — auth checks, query/mutation patterns |
+| `security.md` | `**/auth/**`, `**/login/**`, `**/session/**`, `**/password/**`, `**/token/**` | Security-critical code — no sensitive logging, hashing, session validation |
+| `testing.md` | `__tests__/**/*.ts`, `__tests__/**/*.tsx` | Test patterns — Vitest setup, mocking, component testing |
+| `components.md` | `src/components/**/*.tsx`, `src/layers/**/ui/**/*.tsx` | UI components — Shadcn patterns, accessibility, styling |
+
+**How it works:**
+- Rules are automatically injected when you read/edit matching files
+- Each rule file has a `paths:` frontmatter with glob patterns
+- Multiple rules can apply to the same file
+- Rules provide context-specific guidance without cluttering global CLAUDE.md
+
+**Example rule structure:**
+```markdown
+---
+paths: src/app/api/**/*.ts
+---
+
+# API Route Handler Rules
+
+[Context-specific patterns and requirements...]
+```
+
+**When to create a new rule:**
+- Guidelines apply ONLY to specific file types (not project-wide)
+- Content would clutter CLAUDE.md but is important for those files
+- Different file types need different patterns
+
+**Managing rules:**
+- Create: `/system:update add a rule for [file type] that [description]`
+- Review: `/system:review rules` — audits all rules for consistency
+- Update: Edit `.claude/rules/[name].md` directly, then run `/system:review rules`
+
+**Rule vs CLAUDE.md vs Skill:**
+| Content Type | Where to Put It |
+|--------------|-----------------|
+| Applies to specific file paths | Rule (`.claude/rules/`) |
+| Applies to all project code | CLAUDE.md |
+| Reusable expertise across projects | Skill (`.claude/skills/`) |
+
 ### Commands
 
 #### Development
