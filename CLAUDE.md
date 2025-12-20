@@ -588,13 +588,18 @@ Direct database access is available via MCP tools for debugging and verification
 
 | Agent | Trigger | Use For |
 |-------|---------|---------|
+| `claude-code-guide` | Claude Code questions | Official docs for CLI features, hooks, skills, MCP, Agent SDK |
 | `prisma-expert` | Database work | Schema design, migrations, queries, Neon integration |
 | `react-tanstack-expert` | React/data fetching | Server/client components, TanStack Query, state |
 | `zod-forms-expert` | Forms | Zod schemas, React Hook Form, Shadcn Form |
 | `typescript-expert` | Type issues | Complex types, build errors, TypeScript patterns |
 | `code-search` | Finding files | Locate files by pattern, function, or content |
-| `research-expert` | Web research | Gather information from web sources |
+| `research-expert` | Web research | General web research (non-Claude Code topics) |
 | `product-manager` | Product decisions | Roadmap planning, feature prioritization, scope management |
+
+**Documentation Lookup Priority:**
+- **Claude Code topics** (hooks, skills, commands, agents, MCP) → Use `claude-code-guide`
+- **General web research** (libraries, APIs, patterns) → Use `research-expert`
 
 ### Skills (applied automatically when relevant)
 

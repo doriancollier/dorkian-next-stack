@@ -71,6 +71,39 @@ Execute these steps sequentially. This is an **interactive, research-first** pro
   - What needs to reference the new/updated process?
   - Are there hooks that will validate this?
 
+### Phase 2.5: Research Claude Code Best Practices (When Applicable)
+
+**CRITICAL**: Before proposing changes to Claude Code configuration (commands, agents, skills, hooks), check current best practices:
+
+- [ ] **2.5.1** Determine if research is needed:
+  - Is this creating/modifying a command, agent, skill, or hook?
+  - Does this involve Claude Code architecture decisions?
+  - Has Claude Code released new features that might affect this?
+
+- [ ] **2.5.2** If research is needed, use `claude-code-guide`:
+  ```
+  Task(
+    description="Research Claude Code [component type] best practices",
+    prompt="I'm about to [create/modify] a [command/agent/skill/hook] for [purpose].
+    Find the current best practices, naming conventions, and any recent changes
+    to how Claude Code handles [component type]. Focus on: recommended patterns,
+    common pitfalls, and any new features that might be relevant.",
+    subagent_type="claude-code-guide"
+  )
+  ```
+
+- [ ] **2.5.3** Incorporate findings:
+  - Update the proposed approach based on current best practices
+  - Note any discrepancies between local patterns and official recommendations
+  - Highlight new features that could improve the implementation
+
+**Research triggers:**
+- Creating new commands, agents, skills, or hooks
+- Modifying hook lifecycle events or tool permissions
+- Implementing features that might have official support
+- User mentions wanting "best practices" or "recommended approach"
+- Significant architectural changes to `.claude/` configuration
+
 ### Phase 3: Create the Plan
 
 - [ ] **3.1** Determine what files need to be:

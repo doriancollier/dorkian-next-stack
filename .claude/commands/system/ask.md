@@ -37,24 +37,31 @@ Search these sources to find the relevant process:
 
 **CRITICAL**: If the question involves Claude Code features, capabilities, or best practices NOT found in local documentation:
 
-1. **Spawn a research-expert agent** to check official Claude Code documentation:
+1. **Use the `claude-code-guide` agent** (preferred for Claude Code questions):
    ```
    Task(
-     description="Research Claude Code [topic]",
-     prompt="Quick check: Find official documentation about [specific feature] in Claude Code. Focus on: usage patterns, best practices, and configuration options.",
-     subagent_type="research-expert"
+     description="Lookup Claude Code [topic]",
+     prompt="Find official documentation about [specific feature] in Claude Code. Focus on: usage patterns, best practices, and configuration options.",
+     subagent_type="claude-code-guide"
    )
    ```
 
-2. **Use WebSearch directly** for quick lookups:
-   - Search: `site:docs.anthropic.com claude code [topic]`
-   - Search: `site:github.com/anthropics/claude-code [topic]`
+   The `claude-code-guide` agent has direct access to official Claude Code documentation and is the authoritative source for:
+   - Claude Code CLI features (hooks, skills, slash commands, MCP servers, settings)
+   - Claude Agent SDK (building custom agents)
+   - Claude API and Anthropic SDK usage
 
-3. **Research triggers** - use external research when:
+2. **Use WebSearch** for broader research (non-Claude Code topics):
+   - General programming patterns and best practices
+   - Third-party library documentation
+   - Industry standards and conventions
+
+3. **Research triggers** - use `claude-code-guide` when:
    - Question asks about Claude Code features not in CLAUDE.md
    - Question mentions "skills", "hooks", "agents" architecture
    - Question asks "can Claude Code do X?" and local docs don't answer
    - Question involves recent Claude Code updates or changes
+   - User asks about best practices for configuring Claude Code
 
 ### 3. Read Relevant Files
 

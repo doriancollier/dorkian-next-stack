@@ -200,11 +200,14 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
 - [ ] **7.1** Research current Claude Code Skills best practices:
   ```
   Task(
-    description="Research Claude Code Skills architecture",
-    prompt="Quick check: Find the latest Claude Code documentation about Skills - what makes a good Skill, naming conventions, and when to use Skills vs Agents",
-    subagent_type="research-expert"
+    description="Lookup Claude Code Skills best practices",
+    prompt="Find the latest Claude Code documentation about Skills - what makes a good Skill, naming conventions, directory structure, and when to use Skills vs Agents. Include any recent changes or new features.",
+    subagent_type="claude-code-guide"
   )
   ```
+
+  **Note**: Use `claude-code-guide` (not `research-expert`) for Claude Code documentation.
+  This agent has direct access to official Claude Code docs and is the authoritative source.
 
 - [ ] **7.2** Scan for Skill extraction candidates in these locations:
 
