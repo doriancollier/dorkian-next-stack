@@ -197,4 +197,4 @@ grep -r "from '@/layers/" src/layers/shared/ --include="*.ts" | grep -v "from '@
 
 ## References
 
-For project-specific FSD patterns and Next.js integration, see the Feature-Sliced Design Developer Guide.
+- `developer-guides/01-project-structure.md` — Full FSD patterns and Next.js integration

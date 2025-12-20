@@ -143,6 +143,21 @@ grep -i error .logs/*.log
 - **Forms**: Use React Hook Form + Zod + Shadcn Form components
 - **Styling**: Use Tailwind classes, cn() for conditional classes
 
+## Developer Guides
+
+Detailed implementation patterns live in `developer-guides/`:
+
+| Guide | Content |
+|-------|---------|
+| `01-project-structure.md` | FSD architecture, file naming, directory layout |
+| `02-environment-variables.md` | T3 Env configuration, adding new variables |
+| `03-database-prisma.md` | Prisma 7, DAL patterns, naming conventions |
+| `04-forms-validation.md` | React Hook Form + Zod + Shadcn Form |
+| `05-data-fetching.md` | TanStack Query patterns, mutations |
+| `06-state-management.md` | Zustand vs TanStack Query decision guide |
+| `07-animations.md` | Motion library patterns |
+| `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
+
 ## Design System: Calm Tech
 
 Our interfaces follow the **"Calm Tech"** design language — sophisticated, spacious, effortless.
