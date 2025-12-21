@@ -620,6 +620,16 @@ Direct database access is available via MCP tools for debugging and verification
 | Agent | Trigger | Use For |
 |-------|---------|---------|
 | `claude-code-guide` | Claude Code questions | Official docs for CLI features, hooks, skills, MCP, Agent SDK |
+| `Explore` | Codebase understanding | Answer questions about how code works, find patterns, explore architecture |
+
+**Explore vs code-search:**
+
+| Use Case | Agent | Why |
+|----------|-------|-----|
+| "How does authentication work?" | `Explore` | Need explanation and understanding |
+| "Find all files using Prisma" | `code-search` | Need file list for refactoring |
+| Open-ended exploration | `Explore` | Comprehensive answers, configurable thoroughness |
+| Specific file/pattern lookup | `code-search` | Fast, focused, returns paths only |
 
 **Custom agents** (defined in `.claude/agents/`):
 

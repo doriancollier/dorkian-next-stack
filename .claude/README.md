@@ -50,6 +50,15 @@ Slash commands are triggered explicitly by typing `/command`. They're expanded p
 
 Agents run in isolated context windows via the Task tool. Use for complex, multi-step tasks that benefit from separate context or specialized tool access.
 
+**Built-in agents** (provided by Claude Code):
+
+| Agent | Specialty | When to Use |
+|-------|-----------|-------------|
+| `Explore` | Codebase exploration, understanding how things work | Open-ended questions, architecture understanding, comprehensive answers |
+| `claude-code-guide` | Claude Code documentation | Questions about Claude Code features, hooks, skills, MCP |
+
+**Project agents** (defined in `.claude/agents/`):
+
 | Agent | Specialty | When to Use |
 |-------|-----------|-------------|
 | `prisma-expert` | Database design, migrations, queries, Neon PostgreSQL | Schema changes, DAL patterns, query optimization |
@@ -59,6 +68,10 @@ Agents run in isolated context windows via the Task tool. Use for complex, multi
 | `product-manager` | Roadmap, prioritization, scope management | Strategic decisions, feature prioritization |
 | `research-expert` | Web research, information gathering | External research (non-Claude Code topics) |
 | `code-search` | Finding files, patterns, functions | Locating code by pattern or content |
+
+**Explore vs code-search:**
+- `Explore` — Returns comprehensive answers with explanations ("How does auth work?")
+- `code-search` — Returns focused file lists only ("Find files using Prisma")
 
 **Agent vs Skill**: Agents EXECUTE tasks in isolated context. Skills TEACH expertise in main conversation.
 
