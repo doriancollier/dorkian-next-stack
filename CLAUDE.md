@@ -615,9 +615,16 @@ Direct database access is available via MCP tools for debugging and verification
 
 ### Agents (use proactively for specialized tasks)
 
+**Built-in agents** (provided by Claude Code):
+
 | Agent | Trigger | Use For |
 |-------|---------|---------|
 | `claude-code-guide` | Claude Code questions | Official docs for CLI features, hooks, skills, MCP, Agent SDK |
+
+**Custom agents** (defined in `.claude/agents/`):
+
+| Agent | Trigger | Use For |
+|-------|---------|---------|
 | `prisma-expert` | Database work | Schema design, migrations, queries, Neon integration |
 | `react-tanstack-expert` | React/data fetching | Server/client components, TanStack Query, state |
 | `zod-forms-expert` | Forms | Zod schemas, React Hook Form, Shadcn Form |

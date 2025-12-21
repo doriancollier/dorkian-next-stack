@@ -21,6 +21,7 @@ Review Claude Code processes (commands, agents, hooks, configuration) for clarit
 
 | Area | Location | What to Check |
 |------|----------|---------------|
+| **Harness README** | `/.claude/README.md` | Inventory accuracy, component tables, structure |
 | **Memory/Instructions** | `/CLAUDE.md` | Main instructions, accuracy, completeness |
 | **Commands** | `/.claude/commands/**/*.md` | Clarity, consistency, functionality |
 | **Agents** | `/.claude/agents/**/*.md` | Purpose clarity, tool access, instructions |
@@ -61,21 +62,35 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
 
   # Hook configuration
   cat ".claude/settings.json" | head -50
+
+  # Count components for README reconciliation
+  echo "=== Component Counts ==="
+  echo "Commands: $(find .claude/commands -name '*.md' -type f | wc -l)"
+  echo "Agents: $(find .claude/agents -name '*.md' -type f | wc -l)"
+  echo "Skills: $(find .claude/skills -name 'SKILL.md' -type f 2>/dev/null | wc -l)"
+  echo "Rules: $(find .claude/rules -name '*.md' -type f 2>/dev/null | wc -l)"
   ```
 
-- [ ] **1.3** Report inventory to user:
+- [ ] **1.3** Reconcile with harness README:
+  - Read `.claude/README.md` and compare inventory counts
+  - Check if component counts match between actual files and README documentation
+  - Note any discrepancies for later fixing
+
+- [ ] **1.4** Report inventory to user:
   ```
   Found X commands, Y agents, Z skills, W rules, V developer guides to review.
   Hook configuration: [summary]
   Skills directory: [exists/missing]
   Rules directory: [exists/missing]
+  README inventory: [matches/discrepancies noted]
   ```
 
 ### Phase 2: Read & Analyze
 
-- [ ] **2.1** Read CLAUDE.md first (it's the source of truth)
-  - Note all documented processes
-  - Note all referenced commands/agents
+- [ ] **2.1** Read harness documentation (the sources of truth):
+  - Read `.claude/README.md` for harness structure and component inventory
+  - Read `CLAUDE.md` for project architecture and conventions
+  - Note all documented processes and referenced commands/agents
   - Build a mental model of how things should work
 
 - [ ] **2.2** Read each file in scope, checking for:
@@ -303,6 +318,16 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
 
 ## Review Checklists
 
+### For Harness README
+- [ ] Inventory counts match actual file counts
+- [ ] All commands are listed in Commands table
+- [ ] All agents are listed in Agents table
+- [ ] All skills are listed in Skills table
+- [ ] All rules are listed in Rules table
+- [ ] Directory structure diagram is accurate
+- [ ] Core workflows match available commands
+- [ ] Naming conventions section is up to date
+
 ### For Commands
 - [ ] Has valid YAML frontmatter (description, argument-hint, allowed-tools)
 - [ ] Clear purpose statement
@@ -365,6 +390,12 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
 Check these relationships:
 
 ```
+README.md ←→ Actual Files (do inventory counts match reality?)
+README.md ←→ CLAUDE.md (are component tables consistent?)
+README.md ←→ Commands (are all commands listed in Commands table?)
+README.md ←→ Agents (are all agents listed in Agents table?)
+README.md ←→ Skills (are all skills listed in Skills table?)
+README.md ←→ Rules (are all rules listed in Rules table?)
 CLAUDE.md ←→ Commands (are referenced commands accurate?)
 CLAUDE.md ←→ Agents (are referenced agents accurate?)
 CLAUDE.md ←→ Skills (are referenced skills accurate?)

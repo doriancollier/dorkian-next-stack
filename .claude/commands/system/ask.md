@@ -18,8 +18,14 @@ Answer questions about how to accomplish tasks in this repository using Claude C
 
 Search these sources to find the relevant process:
 
-**CLAUDE.md (primary documentation)**:
+**Harness README (structure overview)**:
+- Read `.claude/README.md` for complete harness inventory and component documentation
+- This file documents all commands, agents, skills, rules, and hooks
+- Contains architecture diagrams, naming conventions, and maintenance guides
+
+**CLAUDE.md (primary project documentation)**:
 - Read the `CLAUDE.md` file in the project root for project instructions and conventions
+- Contains technology stack, architecture patterns, and code conventions
 
 **Developer guides**:
 - Check `developer-guides/` for detailed implementation patterns and best practices
@@ -34,6 +40,9 @@ Search these sources to find the relevant process:
 
 **Available agents**:
 - List all agents in `.claude/agents/` directory
+
+**Available skills**:
+- List all skills in `.claude/skills/` directory
 
 **Hooks (automated behaviors)**:
 - Check `.claude/settings.json` for configured hooks (via ClaudeKit)
@@ -71,6 +80,7 @@ Search these sources to find the relevant process:
 ### 3. Read Relevant Files
 
 Based on the question, read the relevant documentation files to understand:
+- What the harness README says about the component in question (`.claude/README.md`)
 - What slash commands are available for this task
 - What developer guides provide patterns for this
 - What CLAUDE.md says about conventions

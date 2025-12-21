@@ -1,243 +1,410 @@
-# .claude/ Directory
+# Claude Code Harness
 
-This directory contains custom commands and settings distributed via the **claudeflow** npm package. These commands work alongside ClaudeKit to provide a complete workflow orchestration layer.
+This directory contains the **Claude Code Harness** — the complete customization framework that enables Claude Code to work effectively on this project. The harness provides context, commands, expertise, and automation that bridges coding sessions and maintains consistency across multiple conversations.
 
-## Structure
+## What is a Harness?
 
-- **commands/** - Custom slash commands for project workflows
-- **settings.json.example** - Example hook and permission configuration
+A **harness** is the underlying infrastructure that runs an AI coding agent. It includes:
 
-## How It Works
+- **System Context** — Project instructions (CLAUDE.md) that teach Claude about this codebase
+- **Commands** — Slash commands for common workflows (`/git:commit`, `/spec:create`, etc.)
+- **Agents** — Specialized experts for complex tasks (`prisma-expert`, `typescript-expert`)
+- **Skills** — Reusable expertise applied automatically (`debugging-systematically`, `designing-frontend`)
+- **Rules** — Path-specific guidance triggered when editing certain files
+- **Hooks** — Automated validation at lifecycle events (typecheck, lint, test)
 
-This configuration is designed to **layer on top of ClaudeKit**, not replace it:
+**Key insight**: CLAUDE.md is "the highest leverage point of the harness" — it deserves careful, intentional curation.
 
-1. **ClaudeKit** (installed as dependency) provides 30+ agents, 20+ commands, and 25+ hooks
-2. **claudeflow** (this package) adds custom workflow commands specific to feature development
-3. Both work together seamlessly in Claude Code
+## Harness Inventory
 
-## Available Custom Commands
+| Component | Count | Location |
+|-----------|-------|----------|
+| Commands | 38 | `.claude/commands/` |
+| Agents | 7 | `.claude/agents/` |
+| Skills | 7 | `.claude/skills/` |
+| Rules | 5 | `.claude/rules/` |
+| Hooks | 8 | `.claude/settings.json` |
+| MCP Servers | 4 | `.claude/settings.local.json` |
+| Developer Guides | 8 | `developer-guides/` |
 
-### /ideate
-Structured ideation workflow that enforces complete investigation for any code-change task (bug fix or feature). Creates comprehensive ideation documentation.
+## Component Types
 
-**Usage**: `/ideate Fix chat UI auto-scroll bug when messages exceed viewport height`
+### Commands (User-Invoked)
 
-### /ideate-to-spec
-Transform an ideation document into a validated, implementation-ready specification. Bridges the gap between ideation and implementation with automatic open questions resolution.
+Slash commands are triggered explicitly by typing `/command`. They're expanded prompts that provide step-by-step instructions.
 
-**Features:**
-- Extracts decisions from ideation clarifications
-- Builds detailed spec via `/spec:create`
-- **Automatically resolves open questions interactively**
-- Validates completeness via `/spec:validate`
-- Loops until all questions answered
-- Preserves audit trail in spec file
+| Namespace | Commands | Purpose |
+|-----------|----------|---------|
+| `spec/` | create, decompose, execute, feedback, doc-update, migrate | Specification workflow |
+| `git/` | commit, push | Version control with validation |
+| `debug/` | browser, types, test, api, data, logs, rubber-duck, performance | Systematic debugging |
+| `roadmap/` | show, add, open, close, status, validate, analyze, prioritize, enrich | Product roadmap management |
+| `system/` | ask, update, review | Harness maintenance |
+| `db/` | migrate | Database migrations |
+| `dev/` | scaffold | Feature scaffolding |
+| `cc/notify/` | on, off, status | Notification sounds |
+| `cc/ide/` | set, reset | VS Code color schemes |
+| root | ideate, ideate-to-spec, review-recent-work | Feature development |
 
-**Interactive Steps:**
-1. Answer ideation clarifications (text-based)
-2. System creates specification
-3. **System detects open questions**
-4. **Answer each question interactively (with context)**
-5. **Spec updated with strikethrough format**
-6. **Re-validation confirms completeness**
-7. Summary shows resolved questions
+### Agents (Tool-Invoked)
 
-**Usage**: `/ideate-to-spec specs/<slug>/01-ideation.md`
+Agents run in isolated context windows via the Task tool. Use for complex, multi-step tasks that benefit from separate context or specialized tool access.
 
-**Interactive Question Resolution:**
-When the generated specification contains open questions, the system:
-- Parses the "Open Questions" section
-- Presents questions one at a time with progress ("Question 3 of 12")
-- Shows context and available options for each question
-- Supports multi-select questions (e.g., "Which package managers?")
-- Updates spec with strikethrough answers (preserves original context)
-- Re-validates after answering questions
-- Loops until all questions resolved
-- Skips already-answered questions (re-entrant support)
+| Agent | Specialty | When to Use |
+|-------|-----------|-------------|
+| `prisma-expert` | Database design, migrations, queries, Neon PostgreSQL | Schema changes, DAL patterns, query optimization |
+| `react-tanstack-expert` | React, TanStack Query, server/client components | Data fetching, state management, component architecture |
+| `typescript-expert` | Type system, generics, build errors | Complex types, build failures, type patterns |
+| `zod-forms-expert` | Zod schemas, React Hook Form, Shadcn Form | Form validation, schema design, form components |
+| `product-manager` | Roadmap, prioritization, scope management | Strategic decisions, feature prioritization |
+| `research-expert` | Web research, information gathering | External research (non-Claude Code topics) |
+| `code-search` | Finding files, patterns, functions | Locating code by pattern or content |
 
-**Key Behaviors:**
-- **Save-as-you-go:** Each answer is saved immediately to the spec file, enabling recovery if interrupted
-- **Backward compatible:** Specs without "Open Questions" sections skip interactive resolution entirely
-- **External edit detection:** Re-parses spec on each iteration to handle manual changes gracefully
+**Agent vs Skill**: Agents EXECUTE tasks in isolated context. Skills TEACH expertise in main conversation.
 
-**Answer Recording Format:**
+### Skills (Model-Invoked)
 
-Questions are marked as resolved using strikethrough format:
+Skills provide reusable expertise that Claude applies automatically when relevant. They teach "how to think" about problems.
 
-```markdown
-1. ~~**ClaudeKit Version Compatibility**~~ (RESOLVED)
-   **Answer:** Use caret range (^1.0.0)
-   **Rationale:** Automatic updates, test compatibility in CI/CD
+| Skill | Expertise | When Applied |
+|-------|-----------|--------------|
+| `proactive-clarification` | Identifying gaps, asking clarifying questions | Vague requests, ambiguous scope, hidden complexity |
+| `debugging-systematically` | Debugging methodology, troubleshooting patterns | Investigating bugs, tracing issues |
+| `designing-frontend` | Calm Tech design language, UI decisions | Planning UI, reviewing designs, hierarchy decisions |
+| `styling-with-tailwind-shadcn` | Tailwind CSS v4, Shadcn UI implementation | Writing styles, building components, theming |
+| `organizing-fsd-architecture` | Feature-Sliced Design, layer organization | Structuring features, file placement, imports |
+| `working-with-prisma` | Prisma 7 patterns, DAL conventions | Schema design, database queries, migrations |
+| `managing-roadmap-moscow` | MoSCoW prioritization, roadmap utilities | Product planning, prioritization decisions |
 
-   Original context preserved:
-   - Option A: Pin exact version
-   - Option B: Use caret range
-   - Recommendation: Option B
+### Rules (Path-Triggered)
+
+Rules inject context-specific guidance when Claude works with matching files. Each rule has `paths:` frontmatter with glob patterns.
+
+| Rule | Applies To | Key Guidance |
+|------|------------|--------------|
+| `api.md` | `src/app/api/**/*.ts` | Zod validation, DAL usage, error handling |
+| `dal.md` | `src/layers/entities/*/api/**/*.ts` | Auth checks, query/mutation patterns |
+| `security.md` | `**/auth/**`, `**/password/**`, `**/token/**` | No sensitive logging, hashing, session validation |
+| `testing.md` | `__tests__/**/*.ts` | Vitest patterns, mocking, component testing |
+| `components.md` | `src/layers/**/ui/**/*.tsx` | Shadcn patterns, accessibility, styling |
+
+### Hooks (Event-Triggered)
+
+Hooks run automatically at lifecycle events. Configured in `settings.json` via ClaudeKit.
+
+| Event | Hooks | Purpose |
+|-------|-------|---------|
+| `PreToolUse` | file-guard | Block access to sensitive files (.env, .key, .pem) |
+| `PostToolUse` | typecheck-changed, lint-changed, check-any-changed, test-changed | Validate code after edits |
+| `UserPromptSubmit` | thinking-level | Adjust Claude's thinking mode based on prompt complexity |
+| `Stop` | create-checkpoint, check-todos | Session cleanup and progress tracking |
+
+### MCP Servers
+
+External tools available via Model Context Protocol.
+
+| Server | Purpose |
+|--------|---------|
+| `playwright` | Browser automation and visual debugging |
+| `context7` | Library documentation lookup |
+| `shadcn` | Component registry and examples |
+| `mcp-dev-db` | Direct database inspection (dev only) |
+
+### Developer Guides
+
+Detailed implementation patterns in `developer-guides/`:
+
+| Guide | Content |
+|-------|---------|
+| `01-project-structure.md` | FSD architecture, file naming, directory layout |
+| `02-environment-variables.md` | T3 Env configuration, adding new variables |
+| `03-database-prisma.md` | Prisma 7, DAL patterns, naming conventions |
+| `04-forms-validation.md` | React Hook Form + Zod + Shadcn Form |
+| `05-data-fetching.md` | TanStack Query patterns, mutations |
+| `06-state-management.md` | Zustand vs TanStack Query decision guide |
+| `07-animations.md` | Motion library patterns |
+| `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
+
+Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
+
+## Architecture
+
+### Invocation Models
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    INVOCATION TYPES                             │
+├─────────────────────────────────────────────────────────────────┤
+│  USER-INVOKED     │  TOOL-INVOKED    │  AUTO-INVOKED           │
+│  (Commands)       │  (Agents)        │  (Skills, Rules, Hooks) │
+│                   │                  │                         │
+│  /spec:create     │  Task(prisma-    │  Skills: when relevant  │
+│  /git:commit      │    expert)       │  Rules: when editing    │
+│  /ideate          │  Task(research-  │    matching files       │
+│                   │    expert)       │  Hooks: at lifecycle    │
+│                   │                  │    events               │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-This format provides a complete audit trail showing both the original question and the final decision.
+### Component Selection Guide
 
-### /spec:feedback
-Process ONE specific piece of post-implementation feedback with a structured 7-step workflow. After manual testing reveals issues or improvement opportunities, this command:
-
-1. Validates prerequisites (implementation must exist)
-2. Collects detailed feedback description
-3. Explores relevant code with targeted investigation
-4. Optionally consults research-expert for solution approaches
-5. Guides through interactive decisions (implement now/defer/out-of-scope)
-6. Updates spec changelog for "implement now" decisions
-7. Creates STM tasks for deferred items or logs rejected feedback
-
-Seamlessly integrates with incremental `/spec:decompose` and resume `/spec:execute` for feedback iteration cycles.
-
-**Usage**: `/spec:feedback specs/add-user-auth/02-specification.md`
-
-### /spec:doc-update
-Review all documentation to identify what needs to be updated based on a new specification file. Launches parallel documentation expert agents.
-
-**Usage**: `/spec:doc-update specs/text-generator-spec.md`
-
-## Enhanced Spec Commands (Overrides)
-
-These commands override ClaudeKit versions with enhanced features:
-
-### /spec:create
-Enhanced with feature-directory awareness and automatic output path detection. Creates specifications in `specs/<slug>/02-specification.md` format instead of flat structure.
-
-**Usage**: `/spec:create Add user authentication with JWT tokens`
-
-### /spec:decompose
-Enhanced with incremental mode that preserves completed work and creates only new tasks when spec changelog is updated. Tags all STM tasks with `feature:<slug>` for filtering.
-
-**Usage**: `/spec:decompose specs/add-user-auth/02-specification.md`
-
-### /spec:execute
-Enhanced with resume capability that continues from previous sessions, skipping completed work and maintaining implementation history. Reads `04-implementation.md` for session continuity.
-
-**Usage**: `/spec:execute specs/add-user-auth/02-specification.md`
-
-### /spec:migrate
-Migrates existing specs from flat structure (`specs/*.md`) to feature-directory structure (`specs/<slug>/02-specification.md`). Tags existing STM tasks with `feature:<slug>`.
-
-**Usage**: `/spec:migrate`
-
-## Installation
-
-This configuration is distributed as part of the **claudeflow** npm package.
-
-**Install claudeflow:**
-```bash
-# Using npm (recommended)
-npm install -g @33strategies/claudeflow
-
-# Using yarn
-yarn global add @33strategies/claudeflow
-
-# Using pnpm
-pnpm add -g @33strategies/claudeflow
+```
+User explicitly invokes? ────────────────► COMMAND
+        │
+        ▼
+Needs isolated context or specific tools? ► AGENT
+        │
+        ▼
+Teaches reusable expertise? ─────────────► SKILL
+        │
+        ▼
+Applies only to specific file types? ────► RULE
+        │
+        ▼
+Must happen at lifecycle events? ────────► HOOK
+        │
+        ▼
+Project-wide documentation? ─────────────► CLAUDE.md
 ```
 
-**Run setup:**
-```bash
-claudeflow setup    # Interactive mode (prompts for global or project)
+### Naming Conventions
+
+| Component | Pattern | Examples |
+|-----------|---------|----------|
+| Commands | `verb` or `noun` | create, commit, scaffold |
+| Agents | `domain-expert` | prisma-expert, typescript-expert |
+| Skills | `verb-ing-noun` | debugging-systematically, designing-frontend |
+| Rules | `topic` (kebab-case) | api, dal, security |
+| Hooks | `action-target` | file-guard, lint-changed |
+
+## Directory Structure
+
+```
+.claude/
+├── README.md              # This file — harness documentation
+├── settings.json          # Hooks, permissions, environment
+├── settings.local.json    # Local overrides, MCP servers
+│
+├── commands/              # Slash commands (38 total)
+│   ├── spec/              # Specification workflow
+│   ├── git/               # Version control
+│   ├── debug/             # Debugging commands
+│   ├── roadmap/           # Product roadmap
+│   ├── system/            # Harness maintenance
+│   ├── db/                # Database operations
+│   ├── dev/               # Development scaffolding
+│   ├── cc/                # Claude Code configuration
+│   │   ├── notify/        # Notification sounds
+│   │   └── ide/           # IDE color schemes
+│   ├── ideate.md          # Feature ideation
+│   ├── ideate-to-spec.md  # Ideation → specification
+│   └── review-recent-work.md
+│
+├── agents/                # Specialized agents (7 total)
+│   ├── database/
+│   │   └── prisma-expert.md
+│   ├── react/
+│   │   └── react-tanstack-expert.md
+│   ├── typescript/
+│   │   └── typescript-expert.md
+│   ├── forms/
+│   │   └── zod-forms-expert.md
+│   ├── code-search.md
+│   ├── product-manager.md
+│   └── research-expert.md
+│
+├── skills/                # Reusable expertise (7 total)
+│   ├── proactive-clarification/
+│   ├── debugging-systematically/
+│   ├── designing-frontend/
+│   ├── styling-with-tailwind-shadcn/
+│   ├── organizing-fsd-architecture/
+│   ├── working-with-prisma/
+│   └── managing-roadmap-moscow/
+│
+└── rules/                 # Path-specific guidance (5 total)
+    ├── api.md             # API route handlers
+    ├── dal.md             # Data Access Layer
+    ├── security.md        # Security-critical code
+    ├── testing.md         # Test patterns
+    └── components.md      # UI components
 ```
 
-**Choose installation mode:**
-- **Global:** Install to `~/.claude/` (available in all projects)
-- **Project:** Install to `./.claude/` (this project only)
+## Core Workflows
 
-For detailed installation instructions, see [docs/INSTALLATION_GUIDE.md](../docs/INSTALLATION_GUIDE.md).
+### Feature Development
+
+```
+1. /ideate <task>              # Structured ideation
+2. /ideate-to-spec <path>      # Transform to specification
+3. /spec:decompose <path>      # Break into tasks
+4. /spec:execute <path>        # Implement with agents
+5. /spec:feedback <path>       # Process feedback
+6. /git:commit                 # Commit with validation
+7. /git:push                   # Push with full checks
+```
+
+### Debugging
+
+```
+/debug:browser [issue]         # Visual/interaction issues
+/debug:types [file-or-error]   # TypeScript errors
+/debug:test [test-path]        # Failing tests
+/debug:api [endpoint]          # Data flow issues
+/debug:data [table]            # Database inspection
+/debug:logs [search-term]      # Server log analysis
+/debug:rubber-duck [problem]   # Structured problem articulation
+/debug:performance [area]      # Performance issues
+```
+
+### Roadmap Management
+
+```
+/roadmap:show                  # Display summary
+/roadmap:open                  # Open visualization
+/roadmap:add <title>           # Add new item
+/roadmap:prioritize            # Get suggestions
+/roadmap:analyze               # Full health check
+```
+
+### Harness Maintenance
+
+```
+/system:ask [question]         # How to do something
+/system:update [description]   # Add/modify processes
+/system:review [area]          # Audit for consistency
+```
+
+## Maintaining the Harness
+
+### Adding a New Command
+
+1. Create `.claude/commands/[namespace]/[name].md`
+2. Include YAML frontmatter:
+   ```yaml
+   ---
+   description: What this command does
+   argument-hint: [expected arguments]
+   allowed-tools: Tool1, Tool2, Tool3
+   ---
+   ```
+3. Document in this README under Commands section
+4. Update CLAUDE.md if significant
+
+### Adding a New Agent
+
+1. Create `.claude/agents/[category]/[name].md`
+2. Include YAML frontmatter:
+   ```yaml
+   ---
+   name: agent-name
+   description: When to use this agent (include triggers)
+   tools: Tool1, Tool2
+   model: sonnet
+   ---
+   ```
+3. Document in this README under Agents section
+4. Update CLAUDE.md under "Agents" table
+
+### Adding a New Skill
+
+1. Create `.claude/skills/[skill-name]/SKILL.md`
+2. Use gerund naming: `verb-ing-noun`
+3. Include YAML frontmatter:
+   ```yaml
+   ---
+   name: verb-ing-noun
+   description: What it does. Use when [trigger conditions].
+   ---
+   ```
+4. Keep SKILL.md under 500 lines (use reference files for details)
+5. Document in this README under Skills section
+6. Update CLAUDE.md under "Skills" table
+
+### Adding a New Rule
+
+1. Create `.claude/rules/[topic].md`
+2. Include paths frontmatter:
+   ```yaml
+   ---
+   paths: src/path/**/*.ts, other/path/**/*.tsx
+   ---
+   ```
+3. Document in this README under Rules section
+4. Update CLAUDE.md "Path-Specific Rules" section
+
+### Review Cycle
+
+Run `/system:review` periodically to:
+- Validate cross-references between components
+- Check for outdated documentation
+- Identify missing or conflicting patterns
+- Audit skills for extraction candidates
+- Verify hook configurations
+
+## Integration Points
+
+### With CLAUDE.md
+
+CLAUDE.md is the **primary source of truth** for project context. This README documents the harness structure; CLAUDE.md documents:
+- Technology stack and versions
+- Architecture patterns (FSD layers, DAL rules)
+- Code conventions
+- Command and agent reference tables
+- Calculation rules
+
+**Update CLAUDE.md when**:
+- Adding significant new commands or agents
+- Changing core workflows
+- Modifying architectural patterns
+
+### With Developer Guides
+
+Developer guides in `developer-guides/` provide detailed patterns. Skills often reference these guides for comprehensive documentation while keeping SKILL.md concise.
+
+### With Roadmap
+
+The roadmap system (`/roadmap/*`) integrates with the spec workflow:
+- Roadmap items link to specifications
+- `/ideate --roadmap-id` connects ideation to roadmap
+- Status updates flow bidirectionally
 
 ## Troubleshooting
 
-If commands aren't loading or you encounter issues, run the diagnostic command:
+### Commands Not Loading
 
 ```bash
-claudeflow doctor
+# Check command files exist
+ls -la .claude/commands/
+
+# Restart Claude Code
+# Commands load on session start
 ```
 
-This checks:
-- ✓ Node.js version (requires 22.14+)
-- ✓ npm availability
-- ✓ Claude Code CLI installation
-- ✓ ClaudeKit installation (automatic dependency)
-- ✓ .claude/ directory structure
-- ✓ Command files presence (8/8 required)
+### Hooks Not Running
 
-The doctor command provides specific recommendations for any issues found.
-
-**Common issues:**
-- **"Commands not loading"** - Run `claudeflow doctor`, restart Claude Code
-- **"ClaudeKit not found"** - Should install automatically; manual: `npm install -g claudekit`
-- **"Node.js too old"** - Requires Node.js 22.14+, install from https://nodejs.org
-
-For comprehensive troubleshooting, see [README.md](../README.md#troubleshooting).
-
-## Migration from install.sh
-
-If you previously installed using install.sh:
-
-1. **Remove old installation:**
-   ```bash
-   # For global installation
-   rm -rf ~/.claude
-
-   # For project installation
-   rm -rf ./.claude
-   ```
-
-2. **Install via npm:**
-   ```bash
-   npm install -g @33strategies/claudeflow
-   ```
-
-3. **Run setup:**
-   ```bash
-   # For global (if you used install.sh user)
-   claudeflow setup --global
-
-   # For project (if you used install.sh project)
-   claudeflow setup --project
-   ```
-
-4. **Verify installation:**
-   ```bash
-   claudeflow doctor
-   ```
-
-## Customization
-
-1. Copy `settings.json.example` to `settings.json` and modify for your needs
-2. Add your own commands to the `commands/` directory
-3. Commit `settings.json` for team sharing, or use `settings.local.json` for personal settings
-
-## Integration with ClaudeKit
-
-These custom commands complement ClaudeKit's features:
-
-| Feature | ClaudeKit Provides | This Config Adds |
-|---------|-------------------|------------------|
-| **Agents** | typescript-expert, react-expert, testing-expert, etc. (30+) | (Uses ClaudeKit agents) |
-| **Commands** | /git:commit, /spec:create, /research, etc. (20+) | /ideate, /ideate-to-spec, /spec:feedback, /spec:doc-update |
-| **Hooks** | file-guard, typecheck-changed, lint-changed, etc. (25+) | (Uses ClaudeKit hooks via settings.json) |
-
-## Maintenance
-
-**Update claudeflow to latest version:**
 ```bash
-# Using npm
-npm update -g @33strategies/claudeflow
+# Verify settings.json syntax
+cat .claude/settings.json | python3 -m json.tool
 
-# Using yarn
-yarn global upgrade @33strategies/claudeflow
-
-# Using pnpm
-pnpm update -g @33strategies/claudeflow
+# Check ClaudeKit is installed
+claudekit-hooks --help
 ```
 
-**Verify installation health:**
-```bash
-claudeflow doctor
-```
+### Rules Not Triggering
 
-**Note:** ClaudeKit is installed automatically as a dependency of claudeflow and will be updated when you update claudeflow.
+- Verify `paths:` frontmatter uses correct glob syntax
+- Test patterns: `find . -path "[pattern]" -type f`
+- Rules only trigger when editing matching files
+
+### Agent Failures
+
+- Agents run in isolated context (no access to main conversation)
+- Check `tools:` in frontmatter includes needed tools
+- Review agent instructions for missing context
+
+## References
+
+- [Anthropic - Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+- [Claude Code Documentation](https://code.claude.com/docs/)
+- [Writing a Good CLAUDE.md](https://www.humanlayer.dev/blog/writing-a-good-claude-md)

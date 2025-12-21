@@ -27,6 +27,7 @@ Add new processes, update existing ones, or improve the Claude Code workflow bas
 | **Hooks** | `/.claude/settings.json` | Automated validation/actions (via ClaudeKit, event-triggered) |
 | **Developer Guides** | `/developer-guides/[name].md` | Detailed patterns and conventions |
 | **Memory** | `/CLAUDE.md` | Core instructions, high-level documentation |
+| **Harness README** | `/.claude/README.md` | Harness structure, component inventory, maintenance guides |
 
 ## Order of Operations
 
@@ -45,10 +46,10 @@ Execute these steps sequentially. This is an **interactive, research-first** pro
 
 ### Phase 2: Research Current State
 
-- [ ] **2.1** Read CLAUDE.md to understand:
-  - Current project architecture and conventions
-  - Existing patterns and rules
-  - What's already documented
+- [ ] **2.1** Read harness documentation to understand:
+  - Read `.claude/README.md` for harness structure, component inventory, naming conventions
+  - Read `CLAUDE.md` for project architecture and conventions
+  - Understand existing patterns and what's already documented
 
 - [ ] **2.2** Search for related existing processes:
   ```bash
@@ -360,7 +361,15 @@ These rules apply to [description of what files/patterns].
 - Task needs isolation/execution → **Agent**
 - Reusable expertise, auto-activated → **Skill**
 
-- [ ] **4.3** After creating/modifying process files, update CLAUDE.md if:
+- [ ] **4.3** After creating/modifying process files, update `.claude/README.md`:
+  - Add new commands to the Commands table
+  - Add new agents to the Agents table
+  - Add new skills to the Skills table
+  - Add new rules to the Rules table
+  - Update the inventory counts at the top
+  - Update directory structure if needed
+
+- [ ] **4.4** Update CLAUDE.md if:
   - The change introduces a significant new pattern
   - The change affects core project conventions
   - The change should be visible to all AI assistants
