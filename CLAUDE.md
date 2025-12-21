@@ -714,6 +714,12 @@ paths: src/app/api/**/*.ts
 | `/dev:scaffold <name>` | Create new feature with page, components, schema |
 | `/db:migrate` | Apply pending Prisma migrations safely |
 
+#### Application
+
+| Command | Purpose |
+|---------|---------|
+| `/app:upgrade [mode] [flags]` | Comprehensive dependency upgrade with security audit, prioritization, and validation |
+
 #### Git
 
 | Command | Purpose |
