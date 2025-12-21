@@ -36,6 +36,7 @@ coverage/
 
 # temp
 .temp/
+.tmp/
 
 # roadmap server runtime files
 roadmap/.server.pid

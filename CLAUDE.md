@@ -188,6 +188,35 @@ mcp__context7__get-library-docs: {
 - **Forms**: Use React Hook Form + Zod + Shadcn Form components
 - **Styling**: Use Tailwind classes, cn() for conditional classes
 
+## Calculation Rules
+
+**Never perform mental math.** All calculations must be executed via code to ensure accuracy and provide verifiable results.
+
+| Calculation Type | Approach |
+|-----------------|----------|
+| Simple (one expression) | Inline: `node -e "console.log(47 * 83)"` or `python3 -c "print(47 * 83)"` |
+| Complex (multi-step) | Create script in `.temp/` folder, execute, then delete |
+
+**Examples:**
+
+```bash
+# Simple calculation
+node -e "console.log('Result:', 1234 * 5678)"
+
+# Percentage
+python3 -c "print(f'15% of 847 = {847 * 0.15}')"
+
+# Complex (compound interest) - use .temp/ file
+# 1. Create .temp/calc.js with the calculation
+# 2. Run: node .temp/calc.js
+# 3. Delete file when done
+```
+
+**Why this matters:**
+- LLMs can make arithmetic errors when reasoning through calculations
+- Code execution provides verifiable, reproducible results
+- The `.temp/` folder is gitignored, keeping the repo clean
+
 ## Developer Guides
 
 Detailed implementation patterns live in `developer-guides/`:
@@ -728,6 +757,13 @@ paths: src/app/api/**/*.ts
 | `/debug:logs [search-term] [--tail <n>]` | Analyze server logs from `.logs/` for errors and issues |
 | `/debug:rubber-duck [problem]` | Structured problem articulation using rubber duck methodology |
 | `/debug:performance [area] [--url <url>]` | Diagnose slow renders, bundle size, N+1 queries, memory leaks |
+
+#### IDE
+
+| Command | Purpose |
+|---------|---------|
+| `/ide:set <color>` | Generate VS Code color scheme from a seed color (hex, rgb, name) |
+| `/ide:reset` | Remove custom color scheme, restore VS Code defaults |
 
 ### Roadmap-Claude Code Integration
 
