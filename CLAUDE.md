@@ -8,7 +8,7 @@ A production-ready Next.js 16 boilerplate with modern tooling, type safety, and 
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Next.js | 16.0.8 | React framework (App Router) |
+| Next.js | 16.1.0 | React framework (App Router) |
 | React | 19.2 | UI library |
 | TypeScript | 5.9+ | Type safety |
 | Tailwind CSS | 4.x | CSS-first styling |
