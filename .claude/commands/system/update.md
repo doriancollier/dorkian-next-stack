@@ -637,3 +637,4 @@ Before presenting changes for approval:
 - **Request requires multiple file types**: Plan all together, implement sequentially
 - **Request affects hooks**: Extra caution - hooks can block operations
 - **Request is very large**: Break into phases, confirm each phase
+- **Request requires experimentation first**: If the user wants to "learn how to" do something before codifying, suggest `/system:learn` instead. The learn command handles the experimentation loop and then calls `/system:update` to codify what worked.

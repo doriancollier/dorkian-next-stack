@@ -731,6 +731,7 @@ paths: src/app/api/**/*.ts
 | `/system:ask [question]` | Ask how to do something in this repository |
 | `/system:review [area]` | Review processes for clarity and improvements |
 | `/system:update [desc]` | Add, update, or improve system processes |
+| `/system:learn [topic]` | Learn new capabilities through experimentation, then codify |
 
 #### Roadmap
 

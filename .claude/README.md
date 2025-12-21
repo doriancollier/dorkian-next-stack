@@ -19,7 +19,7 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Commands | 38 | `.claude/commands/` |
+| Commands | 39 | `.claude/commands/` |
 | Agents | 7 | `.claude/agents/` |
 | Skills | 7 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
@@ -39,7 +39,7 @@ Slash commands are triggered explicitly by typing `/command`. They're expanded p
 | `git/` | commit, push | Version control with validation |
 | `debug/` | browser, types, test, api, data, logs, rubber-duck, performance | Systematic debugging |
 | `roadmap/` | show, add, open, close, status, validate, analyze, prioritize, enrich | Product roadmap management |
-| `system/` | ask, update, review | Harness maintenance |
+| `system/` | ask, update, review, learn | Harness maintenance |
 | `db/` | migrate | Database migrations |
 | `dev/` | scaffold | Feature scaffolding |
 | `cc/notify/` | on, off, status | Notification sounds |
@@ -273,6 +273,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 /system:ask [question]         # How to do something
 /system:update [description]   # Add/modify processes
 /system:review [area]          # Audit for consistency
+/system:learn [topic]          # Learn through experimentation, then codify
 ```
 
 ## Maintaining the Harness

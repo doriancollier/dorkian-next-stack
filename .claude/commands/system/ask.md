@@ -101,16 +101,19 @@ If NO clear process exists for the user's question:
 
 1. **Acknowledge the gap**: Clearly state that there's no defined process for this yet
 2. **Provide best-effort guidance**: Offer what you can based on similar patterns
-3. **Offer to create a process**: Ask if they'd like to create one
+3. **Offer appropriate next steps**: Based on the nature of the question
 
 Use AskUserQuestion:
 ```
-"I couldn't find a defined process for [topic]. Would you like me to create one?"
-- Yes, create a new process
-- No, the guidance you provided is enough
+"I couldn't find a defined process for [topic]. How would you like to proceed?"
+- Learn through experimentation first → I'll run `/system:learn`
+- Create a defined process now → I'll run `/system:update`
+- The guidance above is enough
 ```
 
-If user says **yes**, run `/system:update create a process for [topic based on user's question]`
+**When to suggest each option:**
+- `/system:learn` — When the user wants to "figure out how to" do something new, experiment with approaches, or discover capabilities
+- `/system:update` — When the solution is known and just needs to be codified into the system
 
 ### 6. Provide the Answer
 
@@ -199,6 +202,8 @@ Reference these when answering:
 | "review recent work" | `/review-recent-work` | Manual code inspection |
 | "manage roadmap" | `/roadmap [subcommand]` | Edit `roadmap/roadmap.json` |
 | "git status" | Direct prompt: "Show git status" | `git status && git diff` |
+| "learn how to X" | `/system:learn [topic]` | Research, experiment, document manually |
+| "codify what worked" | `/system:learn we successfully [X]` | Create skill/command manually |
 
 ## Claude Code Architecture Notes
 
