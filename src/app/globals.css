@@ -197,6 +197,24 @@
   /* Custom font sizes */
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
+  --animate-accordion-collapse: accordion-collapse var(--tw-duration, 200ms) ease-out;
+  --animate-accordion-expand: accordion-expand var(--tw-duration, 200ms) ease-out;
+  @keyframes accordion-collapse {
+  from {
+    height: var(--accordion-panel-height, auto);
+    }
+  to {
+    height: 0;
+    }
+  }
+  @keyframes accordion-expand {
+  from {
+    height: 0;
+    }
+  to {
+    height: var(--accordion-panel-height, auto);
+    }
+  }
 }
 
 @layer base {

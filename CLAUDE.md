@@ -12,7 +12,7 @@ A production-ready Next.js 16 boilerplate with modern tooling, type safety, and 
 | React | 19.2 | UI library |
 | TypeScript | 5.9+ | Type safety |
 | Tailwind CSS | 4.x | CSS-first styling |
-| Shadcn UI | Latest | Component library |
+| Shadcn UI + Base UI | Latest | Component library (via basecn) |
 | Prisma | 7.x | Database ORM |
 | TanStack Query | 5.90+ | Server state management |
 | React Hook Form | 7.68+ | Form handling |
@@ -224,6 +224,58 @@ mcp__context7__get-library-docs: {
   topic: "findMany with include and where clauses"
 }
 ```
+
+## Base UI (Component Primitives)
+
+This project uses **Base UI** (via [basecn](https://basecn.dev)) instead of Radix UI for component primitives. Base UI is maintained by the team behind Material UI and offers modern, accessible components.
+
+### Key Differences from Radix UI
+
+| Pattern | Radix UI | Base UI |
+|---------|----------|---------|
+| Composition | `asChild` prop | `render` prop |
+| Package | Multiple `@radix-ui/*` packages | Single `@base-ui/react` |
+| Positioning | Direct props on Content | `Positioner` wrapper component |
+
+### Composition Pattern
+
+```tsx
+// OLD (Radix): asChild pattern
+<Button asChild>
+  <Link href="/contact">Contact</Link>
+</Button>
+
+// NEW (Base UI): render prop pattern
+<Button render={<Link href="/contact" />}>
+  Contact
+</Button>
+```
+
+### Registry Configuration
+
+The basecn registry is configured in `components.json`:
+
+```json
+{
+  "registries": {
+    "@basecn": "https://basecn.dev/r/{name}.json"
+  }
+}
+```
+
+Install new components with: `npx shadcn@latest add @basecn/<component>`
+
+### Turbopack + pnpm Compatibility
+
+Base UI requires `transpilePackages` in `next.config.ts` for Turbopack + pnpm to resolve symlinked dependencies correctly:
+
+```typescript
+const nextConfig: NextConfig = {
+  transpilePackages: ['@base-ui/react', '@base-ui/utils'],
+}
+```
+
+**Without this configuration:** Runtime 500 error with "Element type is invalid... got: undefined" because Turbopack can't resolve `@base-ui/utils` through pnpm's symlinked `node_modules`.
 
 ## Code Conventions
 

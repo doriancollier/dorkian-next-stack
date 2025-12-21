@@ -84,6 +84,76 @@ export function FeatureComponent({ data, onAction }: Props) {
 }
 ```
 
+## Base UI Composition (Not Radix)
+
+This project uses **Base UI** (via basecn) instead of Radix UI. Key differences:
+
+### Composition Pattern: `render` prop (not `asChild`)
+
+```tsx
+// WRONG (Radix pattern - won't work)
+<Button asChild>
+  <Link href="/contact">Contact</Link>
+</Button>
+
+// CORRECT (Base UI pattern)
+<Button render={<Link href="/contact" />}>
+  Contact
+</Button>
+
+// With SidebarMenuButton
+<SidebarMenuButton render={<Link href={item.href} />}>
+  <Icon className="size-4" />
+  <span>{item.label}</span>
+</SidebarMenuButton>
+```
+
+### Type Workarounds
+
+**Dialog children type**: When wrapping Dialog, use `Omit` to override children type:
+
+```tsx
+function MyDialog({ children, ...props }: Omit<DialogProps, "children"> & {
+  children?: React.ReactNode
+}) {
+  // children can now be passed to non-Dialog components
+}
+```
+
+**Button type attribute**: Base UI Button doesn't include HTML button type by default:
+
+```tsx
+// Add type explicitly when needed
+type Props = ButtonProps & {
+  type?: "button" | "submit" | "reset"
+}
+```
+
+### Component Mapping
+
+| Radix | Base UI |
+|-------|---------|
+| HoverCard | PreviewCard |
+| `side` prop on Content | `TooltipPositioner` wrapper |
+| `asChild` | `render` prop |
+| Multiple @radix-ui/* packages | Single @base-ui/react |
+
+### SSR Purity
+
+Never use `Math.random()` in components - causes lint errors and SSR mismatches:
+
+```tsx
+// WRONG
+const width = Math.random() * 40 + 50
+
+// CORRECT - use useId for deterministic "random" values
+const id = React.useId()
+const width = React.useMemo(() => {
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return (hash % 40) + 50
+}, [id])
+```
+
 ## Required Patterns
 
 ### Use Client Directive

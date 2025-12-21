@@ -30,12 +30,20 @@ mcp__context7__get-library-docs: {
   context7CompatibleLibraryID: "[resolved-id]",
   topic: "[component name, e.g., 'Button', 'Form', 'Dialog']"
 }
+
+# Fetch Base UI docs (for primitive behavior)
+mcp__context7__resolve-library-id: { libraryName: "base-ui react" }
+mcp__context7__get-library-docs: {
+  context7CompatibleLibraryID: "/mui/base-ui",
+  topic: "[component, e.g., 'button render prop', 'dialog composition']"
+}
 ```
 
 **When to fetch docs:**
 - Uncertain about Tailwind v4 CSS-first syntax
-- Adding new Shadcn components
+- Adding new Shadcn/basecn components
 - Implementing theming or dark mode
+- Understanding Base UI primitive behavior (render prop, useRender hook)
 
 ## When to Use
 
@@ -44,6 +52,31 @@ mcp__context7__get-library-docs: {
 - Using the `cn()` utility for conditional classes
 - Customizing Shadcn UI components
 - Adding animations with Motion library
+
+## Installing Components
+
+This project uses **basecn** (Base UI powered Shadcn components):
+
+```bash
+# Install a component from basecn registry
+npx shadcn@latest add @basecn/<component>
+
+# Examples
+npx shadcn@latest add @basecn/button
+npx shadcn@latest add @basecn/dialog
+npx shadcn@latest add @basecn/select
+```
+
+The basecn registry is configured in `components.json`:
+```json
+{
+  "registries": {
+    "@basecn": "https://basecn.dev/r/{name}.json"
+  }
+}
+```
+
+**Note**: Use `render` prop for composition (not `asChild`). See `.claude/rules/components.md` for patterns.
 
 ## Typography
 

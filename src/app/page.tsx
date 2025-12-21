@@ -115,11 +115,9 @@ export default function HomePage() {
             </div>
           </div>
           <div className="pt-2">
-            <Button asChild>
-              <Link href="/example">
+            <Button render={<Link href="/example" />}>
                 View Example
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
             </Button>
           </div>
         </CardContent>

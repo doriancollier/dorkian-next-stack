@@ -6,6 +6,9 @@ import createJiti from 'jiti'
 const jiti = createJiti(fileURLToPath(import.meta.url))
 jiti('./src/env')
 
-const nextConfig: NextConfig = {}
+const nextConfig: NextConfig = {
+  // Transpile Base UI packages for better Turbopack + pnpm compatibility
+  transpilePackages: ['@base-ui/react', '@base-ui/utils'],
+}
 
 export default nextConfig

@@ -33,14 +33,12 @@ export function NavMain() {
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
-                asChild
+                render={<Link href={item.href} />}
                 isActive={pathname === item.href}
                 tooltip={item.label}
               >
-                <Link href={item.href}>
-                  <item.icon className="size-4" />
-                  <span>{item.label}</span>
-                </Link>
+                <item.icon className="size-4" />
+                <span>{item.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
