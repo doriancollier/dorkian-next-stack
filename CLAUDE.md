@@ -21,6 +21,7 @@ A production-ready Next.js 16 boilerplate with modern tooling, type safety, and 
 | Motion | 12.x | Animations |
 | usehooks-ts | 3.x | React hooks collection |
 | lodash-es | 4.17 | Utility functions |
+| Knip | 5.x | Dead code detection |
 
 ## Directory Structure
 
@@ -73,6 +74,9 @@ pnpm dev              # Start dev server with Turbopack (logs to .logs/)
 pnpm build            # Build for production
 pnpm start            # Start production server
 pnpm lint             # Run ESLint
+pnpm typecheck        # Run TypeScript type checking
+pnpm knip             # Find unused code, dependencies, exports
+pnpm knip:fix         # Auto-fix unused exports and dependencies
 pnpm prisma:generate  # Generate Prisma client
 pnpm prisma:studio    # Open Prisma Studio
 ```
@@ -104,6 +108,48 @@ tail -f ".logs/$(ls -t .logs/ | head -1)"
 # Search logs for errors
 grep -i error .logs/*.log
 ```
+
+## Dead Code Detection (Knip)
+
+Knip finds unused files, dependencies, and exports. Configuration is in `knip.config.ts`.
+
+### Quick Commands
+
+```bash
+pnpm knip           # Check for issues (no changes)
+pnpm knip:fix       # Auto-fix unused exports and dependencies
+/app:cleanup        # Full cleanup workflow with Claude Code
+```
+
+### Boilerplate Pattern
+
+This project uses an "add-on-demand" pattern:
+- Shadcn UI components are pre-installed but ignored in Knip config
+- As components are used, remove them from the ignore list
+- This allows Knip to catch genuinely unused components
+
+### Adding Exceptions
+
+To keep intentionally unused code:
+
+```typescript
+// In knip.config.ts
+ignore: [
+  'src/components/ui/**',  // Component library
+  'src/path/to/file.ts',   // Specific file with reason
+]
+
+ignoreDependencies: [
+  'package-name',  // Loaded via non-standard means (CSS, config)
+]
+```
+
+### When to Run
+
+- Before dependency upgrades (`/app:upgrade`)
+- Monthly maintenance
+- Before major releases
+- After removing features
 
 ## Breaking Changes Notes
 
@@ -719,6 +765,7 @@ paths: src/app/api/**/*.ts
 | Command | Purpose |
 |---------|---------|
 | `/app:upgrade [mode] [flags]` | Comprehensive dependency upgrade with security audit, prioritization, and validation |
+| `/app:cleanup [mode] [flags]` | Codebase cleanup using Knip for dead code, unused dependencies, and exports |
 
 #### Git
 

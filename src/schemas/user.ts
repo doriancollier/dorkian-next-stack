@@ -6,6 +6,3 @@ export const userSchema = z.object({
 })
 
 export type UserFormData = z.infer<typeof userSchema>
-
-export const createUserSchema = userSchema
-export const updateUserSchema = userSchema.partial()

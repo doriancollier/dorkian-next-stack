@@ -7,7 +7,7 @@
 
 import { redactSensitiveData } from './sql-parser';
 
-export interface LogEntry {
+interface LogEntry {
   timestamp: string;
   tool: string;
   statementClass?: string;

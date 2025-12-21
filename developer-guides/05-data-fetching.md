@@ -39,7 +39,7 @@ export const queryKeys = {
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query-client'
+import { queryKeys } from '@/layers/shared/lib/query-client'
 
 interface User {
   id: string
@@ -76,7 +76,7 @@ export function UserList() {
 
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query-client'
+import { queryKeys } from '@/layers/shared/lib/query-client'
 
 async function createUser(data: { name: string; email: string }) {
   const response = await fetch('/api/users', {

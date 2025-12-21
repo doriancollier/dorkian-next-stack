@@ -181,7 +181,7 @@ export function CreateUserButton() {
 
 ## TanStack Query 5 Patterns
 
-### Query Client Setup (src/lib/query-client.ts)
+### Query Client Setup (src/layers/shared/lib/query-client.ts)
 ```typescript
 import { QueryClient } from '@tanstack/react-query'
 
@@ -204,7 +204,7 @@ export function makeQueryClient() {
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useState } from 'react'
-import { makeQueryClient } from '@/lib/query-client'
+import { makeQueryClient } from '@/layers/shared/lib/query-client'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => makeQueryClient())

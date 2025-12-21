@@ -73,21 +73,6 @@ export function isDevelopment(): boolean {
 }
 
 /**
- * Get configuration value with fallback
- */
-export function getConfig(key: string, defaultValue: string): string {
-  try {
-    // Try to use T3 Env if available
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { env } = require('@/env');
-    return env[key] || defaultValue;
-  } catch {
-    // Fall back to process.env
-    return process.env[key] || defaultValue;
-  }
-}
-
-/**
  * Parse integer configuration with fallback
  */
 export function getConfigInt(key: string, defaultValue: number): number {

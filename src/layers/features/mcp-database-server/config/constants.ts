@@ -41,16 +41,6 @@ export const ALLOWED_DML = [
   STATEMENT_TYPES.DELETE,
 ] as const;
 
-// Forbidden DDL operations
-export const FORBIDDEN_DDL = [
-  STATEMENT_TYPES.CREATE,
-  STATEMENT_TYPES.ALTER,
-  STATEMENT_TYPES.DROP,
-  STATEMENT_TYPES.TRUNCATE,
-  STATEMENT_TYPES.GRANT,
-  STATEMENT_TYPES.REVOKE,
-] as const;
-
 // Error messages
 export const ERROR_MESSAGES = {
   NOT_DEVELOPMENT: 'MCP server is only available in development environment',

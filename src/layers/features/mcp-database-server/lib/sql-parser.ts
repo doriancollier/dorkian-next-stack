@@ -12,7 +12,7 @@ import {
   type StatementType 
 } from '../config/constants';
 
-export interface ParseResult {
+interface ParseResult {
   valid: boolean;
   statementType?: StatementType;
   error?: string;
