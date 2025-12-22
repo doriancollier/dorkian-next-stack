@@ -1,9 +1,13 @@
 # MCP Database Server
 
-A development-only Model Context Protocol (MCP) server that provides AI agents with controlled access to your PostgreSQL database. This allows AI assistants like Claude to query and manipulate your database during development.
+A development-only Model Context Protocol (MCP) server that provides AI agents with controlled access to your database. This allows AI assistants like Claude to query and manipulate your database during development.
+
+**Supports both PostgreSQL and SQLite** - the server automatically detects which database you're using from your `DATABASE_URL` and adapts its queries accordingly.
 
 ## Features
 
+- **Multi-database support**: Works with both PostgreSQL and SQLite
+- **Automatic detection**: Detects database type from connection string
 - **Development-only**: Automatically disabled in production environments
 - **Localhost-only**: Rejects requests from non-local sources
 - **SQL validation**: Prevents dangerous DDL operations (DROP, ALTER, etc.)
@@ -124,32 +128,44 @@ export const env = createEnv({
 ## Database Requirements
 
 This server requires:
-- PostgreSQL database
+- **PostgreSQL** or **SQLite** database
 - Prisma ORM configured and initialized
 - Access to `prisma` client instance
 
+### Database Detection
+
+The server automatically detects your database type from `DATABASE_URL`:
+
+| URL Pattern | Database Type |
+|-------------|---------------|
+| `file:./path/to/db.sqlite` | SQLite |
+| `*.db` or `*.sqlite` | SQLite |
+| `postgresql://...` or `postgres://...` | PostgreSQL |
+
 ### Prisma Setup
 
-Ensure you have Prisma 7 configured with a driver adapter:
+Ensure you have Prisma 7 configured with the appropriate driver adapter:
 
+**For SQLite:**
 ```typescript
-// src/lib/prisma.ts (or similar)
+// src/lib/prisma.ts
+import { PrismaClient } from '@/generated/prisma/client';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL || 'file:./.data/dev.db',
+});
+export const prisma = new PrismaClient({ adapter });
+```
+
+**For PostgreSQL:**
+```typescript
+// src/lib/prisma.ts
 import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-const prismaClientSingleton = () => {
-  // Prisma 7: Requires driver adapter for TypeScript-based client
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-  return new PrismaClient({ adapter });
-};
-
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+export const prisma = new PrismaClient({ adapter });
 ```
 
 ## Usage with Claude Desktop

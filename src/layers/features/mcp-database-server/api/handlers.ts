@@ -5,12 +5,13 @@
  * Each tool performs specific database operations with appropriate
  * security checks and logging.
  *
+ * Supports both PostgreSQL and SQLite databases through the query adapter.
+ *
  * NOTE: This module requires direct Prisma access for raw SQL operations.
  * This is intentional and necessary for the MCP server functionality.
  */
 
 import { z } from 'zod';
-import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
   classifySQL,
@@ -35,6 +36,14 @@ import {
   getConfigInt,
 } from '../lib/security';
 import { MCP_CONFIG, ERROR_MESSAGES } from '../config/constants';
+import {
+  getQueryAdapter,
+  getDatabaseType,
+  getSqliteIndexColumnsQuery,
+  transformSqliteIndexColumns,
+  type DatabaseQueryAdapter,
+  type IndexInfo,
+} from '../lib/db-adapter';
 
 // ============================================================================
 // Types for MCP Server
@@ -57,60 +66,6 @@ interface MCPServer {
  */
 interface MCPToolResponse {
   content: Array<{ type: 'text'; text: string | undefined }>;
-}
-
-// ============================================================================
-// Database Query Result Types
-// ============================================================================
-
-interface TableRow {
-  table_name: string;
-}
-
-interface ColumnInfo {
-  column_name: string;
-  data_type: string;
-  is_nullable: string;
-  column_default: string | null;
-}
-
-interface DetailedColumnInfo extends ColumnInfo {
-  character_maximum_length: number | null;
-  numeric_precision: number | null;
-  numeric_scale: number | null;
-}
-
-interface PrimaryKeyRow {
-  column_name: string;
-}
-
-interface ForeignKeyRow {
-  column_name: string;
-  ref_table: string;
-  ref_column: string;
-}
-
-interface RowCountResult {
-  count: bigint;
-}
-
-interface IndexRow {
-  index_name: string;
-  column_name: string;
-  is_unique: boolean;
-  is_primary: boolean;
-}
-
-interface ConstraintRow {
-  constraint_name: string;
-  constraint_type: string;
-}
-
-interface IndexInfo {
-  name: string;
-  columns: string[];
-  isUnique: boolean;
-  isPrimary: boolean;
 }
 
 // ============================================================================
@@ -177,6 +132,72 @@ async function validateAccess(): Promise<{
 }
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Set statement timeout if supported by the database
+ */
+async function setStatementTimeout(adapter: DatabaseQueryAdapter): Promise<void> {
+  if (!adapter.supportsStatementTimeout()) {
+    return;
+  }
+
+  const timeoutMs = getConfigInt(
+    'MCP_STMT_TIMEOUT_MS',
+    MCP_CONFIG.STATEMENT_TIMEOUT_MS
+  );
+  const query = adapter.getStatementTimeoutQuery(timeoutMs);
+
+  if (query) {
+    await prisma.$executeRawUnsafe(query);
+  }
+}
+
+/**
+ * Get row count for a table
+ */
+async function getRowCount(tableName: string): Promise<number> {
+  const result = await prisma.$queryRawUnsafe<Array<{ count: bigint | number }>>(
+    `SELECT COUNT(*) as count FROM "${tableName}"`
+  );
+  return Number(result[0]?.count || 0);
+}
+
+/**
+ * Get sample rows from a table
+ */
+async function getSampleRows(
+  tableName: string,
+  limit: number = 5
+): Promise<Record<string, unknown>[]> {
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT * FROM "${tableName}" LIMIT ${limit}`
+  );
+  return Array.isArray(rows) ? rows : [];
+}
+
+/**
+ * Get index columns for SQLite indexes
+ */
+async function enrichSqliteIndexes(indexes: IndexInfo[]): Promise<IndexInfo[]> {
+  const enriched: IndexInfo[] = [];
+
+  for (const index of indexes) {
+    const columnsQuery = getSqliteIndexColumnsQuery(index.name);
+    const columnsResult = await prisma.$queryRawUnsafe<unknown[]>(columnsQuery);
+    const columns = transformSqliteIndexColumns(columnsResult);
+
+    enriched.push({
+      ...index,
+      columns,
+    });
+  }
+
+  return enriched;
+}
+
+// ============================================================================
 // Tool Registration
 // ============================================================================
 
@@ -184,6 +205,9 @@ async function validateAccess(): Promise<{
  * Register all MCP database tools
  */
 export function registerTools(server: MCPServer): void {
+  const adapter = getQueryAdapter();
+  const dbType = getDatabaseType();
+
   // Health check tool
   server.tool(
     'health',
@@ -209,7 +233,7 @@ export function registerTools(server: MCPServer): void {
         content: [
           {
             type: 'text',
-            text: 'MCP server is healthy and ready to accept commands',
+            text: `MCP server is healthy and ready to accept commands (database: ${dbType})`,
           },
         ],
       };
@@ -233,75 +257,46 @@ export function registerTools(server: MCPServer): void {
 
       try {
         // Get tables
-        const tables = await prisma.$queryRaw<TableRow[]>`
-          SELECT table_name
-          FROM information_schema.tables
-          WHERE table_schema = 'public'
-          AND table_type = 'BASE TABLE'
-          ORDER BY table_name
-        `;
+        const tablesQuery = adapter.getTablesQuery();
+        const tablesResult = await prisma.$queryRawUnsafe<unknown[]>(tablesQuery);
+        const tables = adapter.transformTablesResult(tablesResult);
 
         const schema = [];
 
         for (const table of tables) {
           // Get columns
-          const columns = await prisma.$queryRaw<ColumnInfo[]>`
-            SELECT column_name, data_type, is_nullable, column_default
-            FROM information_schema.columns
-            WHERE table_schema = 'public'
-            AND table_name = ${table.table_name}
-            ORDER BY ordinal_position
-          `;
-
-          // Get primary keys
-          const primaryKeys = await prisma.$queryRaw<PrimaryKeyRow[]>`
-            SELECT kcu.column_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-              ON tc.constraint_name = kcu.constraint_name
-            WHERE tc.constraint_type = 'PRIMARY KEY'
-            AND tc.table_schema = 'public'
-            AND tc.table_name = ${table.table_name}
-            ORDER BY kcu.ordinal_position
-          `;
+          const columnsQuery = adapter.getColumnsQuery(table.name);
+          const columnsResult = await prisma.$queryRawUnsafe<unknown[]>(columnsQuery);
+          const columns = adapter.transformColumnsResult(columnsResult);
 
           // Get foreign keys
-          const foreignKeys = await prisma.$queryRaw<ForeignKeyRow[]>`
-            SELECT
-              kcu.column_name,
-              ccu.table_name AS ref_table,
-              ccu.column_name AS ref_column
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-              ON tc.constraint_name = kcu.constraint_name
-            JOIN information_schema.constraint_column_usage ccu
-              ON ccu.constraint_name = tc.constraint_name
-            WHERE tc.constraint_type = 'FOREIGN KEY'
-            AND tc.table_schema = 'public'
-            AND tc.table_name = ${table.table_name}
-            ORDER BY kcu.ordinal_position
-          `;
+          const fksQuery = adapter.getForeignKeysQuery(table.name);
+          const fksResult = await prisma.$queryRawUnsafe<unknown[]>(fksQuery);
+          const foreignKeys = adapter.transformForeignKeysResult(fksResult);
 
-          // Get approximate row count
-          const rowCount = await prisma.$queryRaw<RowCountResult[]>`
-            SELECT COUNT(*) as count FROM ${Prisma.raw(`"${table.table_name}"`)}
-          `;
+          // Get row count
+          const rowCount = await getRowCount(table.name);
+
+          // Extract primary keys from columns
+          const primaryKey = columns
+            .filter((col) => col.isPrimaryKey)
+            .map((col) => col.name);
 
           schema.push({
-            table: table.table_name,
-            rowCount: Number(rowCount[0]?.count || 0),
+            table: table.name,
+            rowCount,
             columns: columns.map((col) => ({
-              name: col.column_name,
-              type: col.data_type,
-              isNullable: col.is_nullable === 'YES',
-              default: col.column_default,
+              name: col.name,
+              type: col.type,
+              isNullable: col.isNullable,
+              default: col.defaultValue,
             })),
-            primaryKey: primaryKeys.map((pk) => pk.column_name),
+            primaryKey,
             foreignKeys: foreignKeys.map((fk) => ({
-              column: fk.column_name,
+              column: fk.column,
               references: {
-                table: fk.ref_table,
-                column: fk.ref_column,
+                table: fk.referencedTable,
+                column: fk.referencedColumn,
               },
             })),
           });
@@ -318,7 +313,7 @@ export function registerTools(server: MCPServer): void {
           content: [
             {
               type: 'text',
-              text: JSON.stringify({ tables: schema }, null, 2),
+              text: JSON.stringify({ database: dbType, tables: schema }, null, 2),
             },
           ],
         };
@@ -362,94 +357,50 @@ export function registerTools(server: MCPServer): void {
       }
 
       try {
-        // Get columns with more details
-        const columns = await prisma.$queryRaw<DetailedColumnInfo[]>`
-          SELECT
-            column_name,
-            data_type,
-            character_maximum_length,
-            numeric_precision,
-            numeric_scale,
-            is_nullable,
-            column_default
-          FROM information_schema.columns
-          WHERE table_schema = 'public'
-          AND table_name = ${table}
-          ORDER BY ordinal_position
-        `;
+        // Get columns
+        const columnsQuery = adapter.getColumnsQuery(table);
+        const columnsResult = await prisma.$queryRawUnsafe<unknown[]>(columnsQuery);
+        const columns = adapter.transformColumnsResult(columnsResult);
 
         if (columns.length === 0) {
           throw new Error(`Table '${table}' not found`);
         }
 
         // Get indexes
-        const indexes = await prisma.$queryRaw<IndexRow[]>`
-          SELECT
-            i.relname AS index_name,
-            a.attname AS column_name,
-            ix.indisunique AS is_unique,
-            ix.indisprimary AS is_primary
-          FROM pg_class t
-          JOIN pg_index ix ON t.oid = ix.indrelid
-          JOIN pg_class i ON ix.indexrelid = i.oid
-          JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
-          JOIN pg_namespace n ON n.oid = t.relnamespace
-          WHERE n.nspname = 'public'
-          AND t.relname = ${table}
-          AND t.relkind = 'r'
-          ORDER BY i.relname, a.attnum
-        `;
+        const indexesQuery = adapter.getIndexesQuery(table);
+        const indexesResult = await prisma.$queryRawUnsafe<unknown[]>(indexesQuery);
+        let indexes = adapter.transformIndexesResult(indexesResult);
+
+        // For SQLite, we need to enrich indexes with their columns
+        if (dbType === 'sqlite') {
+          indexes = await enrichSqliteIndexes(indexes);
+        }
 
         // Get constraints
-        const constraints = await prisma.$queryRaw<ConstraintRow[]>`
-          SELECT constraint_name, constraint_type
-          FROM information_schema.table_constraints
-          WHERE table_schema = 'public'
-          AND table_name = ${table}
-          ORDER BY constraint_name
-        `;
+        const constraintsQuery = adapter.getConstraintsQuery(table);
+        const constraintsResult = await prisma.$queryRawUnsafe<unknown[]>(constraintsQuery);
+        const constraints = adapter.transformConstraintsResult(constraintsResult);
 
         // Get row count
-        const rowCount = await prisma.$queryRaw<RowCountResult[]>`
-          SELECT COUNT(*) as count FROM ${Prisma.raw(`"${table}"`)}
-        `;
+        const rowCount = await getRowCount(table);
 
-        // Get sample rows (limit 5)
-        const sampleRows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-          `SELECT * FROM "${table}" LIMIT 5`
-        );
+        // Get sample rows
+        const sampleRows = await getSampleRows(table, 5);
 
         const details = {
+          database: dbType,
           table,
-          rowCount: Number(rowCount[0]?.count || 0),
+          rowCount,
           columns: columns.map((col) => ({
-            name: col.column_name,
-            type: col.data_type,
-            maxLength: col.character_maximum_length,
-            precision: col.numeric_precision,
-            scale: col.numeric_scale,
-            isNullable: col.is_nullable === 'YES',
-            default: col.column_default,
+            name: col.name,
+            type: col.type,
+            isNullable: col.isNullable,
+            default: col.defaultValue,
+            isPrimaryKey: col.isPrimaryKey,
           })),
-          indexes: indexes.reduce<IndexInfo[]>((acc, idx) => {
-            const existing = acc.find((i) => i.name === idx.index_name);
-            if (existing) {
-              existing.columns.push(idx.column_name);
-            } else {
-              acc.push({
-                name: idx.index_name,
-                columns: [idx.column_name],
-                isUnique: idx.is_unique,
-                isPrimary: idx.is_primary,
-              });
-            }
-            return acc;
-          }, []),
-          constraints: constraints.map((c) => ({
-            name: c.constraint_name,
-            type: c.constraint_type,
-          })),
-          sampleRows: Array.isArray(sampleRows) ? sampleRows.slice(0, 5) : [],
+          indexes,
+          constraints,
+          sampleRows,
         };
 
         logMCPOperation({
@@ -542,12 +493,8 @@ export function registerTools(server: MCPServer): void {
 
         logSQL(limitedSQL, params);
 
-        // Set statement timeout
-        const timeoutMs = getConfigInt(
-          'MCP_STMT_TIMEOUT_MS',
-          MCP_CONFIG.STATEMENT_TIMEOUT_MS
-        );
-        await prisma.$executeRawUnsafe(`SET statement_timeout = ${timeoutMs}`);
+        // Set statement timeout if supported
+        await setStatementTimeout(adapter);
 
         // Execute query
         const result =
@@ -645,15 +592,13 @@ export function registerTools(server: MCPServer): void {
         logSQL(sql, params);
         console.log('[MCP_DB] Mutation reason:', requireReason);
 
-        // Set statement timeout
-        const timeoutMs = getConfigInt(
-          'MCP_STMT_TIMEOUT_MS',
-          MCP_CONFIG.STATEMENT_TIMEOUT_MS
-        );
-        await prisma.$executeRawUnsafe(`SET statement_timeout = ${timeoutMs}`);
+        // Set statement timeout if supported
+        await setStatementTimeout(adapter);
 
         // Check if query has RETURNING clause
-        const hasReturning = sql.toUpperCase().includes('RETURNING');
+        const hasReturning =
+          adapter.supportsReturningClause() &&
+          sql.toUpperCase().includes('RETURNING');
 
         let rowCount = 0;
         let returning: unknown[] | undefined = undefined;
@@ -725,7 +670,7 @@ export function registerTools(server: MCPServer): void {
   // Explain query tool
   server.tool(
     'explain_query',
-    'Explain a SELECT query with cost estimates',
+    'Explain a SELECT query with execution plan',
     {
       sql: z.string().describe('SELECT SQL query to explain'),
     },
@@ -757,13 +702,12 @@ export function registerTools(server: MCPServer): void {
       }
 
       try {
-        const explainSQL = `EXPLAIN (FORMAT JSON, ANALYZE FALSE, COSTS TRUE) ${sql}`;
+        const explainSQL = adapter.getExplainQuery(sql);
 
         logSQL(redactSensitiveData(explainSQL));
 
-        const result = await prisma.$queryRawUnsafe<
-          Array<{ 'QUERY PLAN': unknown }>
-        >(explainSQL);
+        const result = await prisma.$queryRawUnsafe<unknown[]>(explainSQL);
+        const parsed = adapter.parseExplainResult(result);
 
         logMCPOperation({
           timestamp: getTimestamp(),
@@ -776,7 +720,15 @@ export function registerTools(server: MCPServer): void {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(result[0], null, 2),
+              text: JSON.stringify(
+                {
+                  database: dbType,
+                  format: parsed.format,
+                  plan: parsed.plan,
+                },
+                null,
+                2
+              ),
             },
           ],
         };
@@ -833,7 +785,7 @@ export function registerTools(server: MCPServer): void {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(result, null, 2),
+            text: JSON.stringify({ database: dbType, ...result }, null, 2),
           },
         ],
       };
