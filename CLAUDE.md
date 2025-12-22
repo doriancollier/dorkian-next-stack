@@ -322,6 +322,7 @@ Detailed implementation patterns live in `developer-guides/`:
 
 | Guide | Content |
 |-------|---------|
+| `INDEX.md` | **Coverage map** — maps code areas to guides, tracks last-reviewed dates |
 | `01-project-structure.md` | FSD architecture, file naming, directory layout |
 | `02-environment-variables.md` | T3 Env configuration, adding new variables |
 | `03-database-prisma.md` | Prisma 7, DAL patterns, naming conventions |
@@ -330,6 +331,18 @@ Detailed implementation patterns live in `developer-guides/`:
 | `06-state-management.md` | Zustand vs TanStack Query decision guide |
 | `07-animations.md` | Motion library patterns |
 | `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
+
+### Keeping Guides Up to Date
+
+The harness includes automatic documentation drift detection:
+
+| Mechanism | When | What It Does |
+|-----------|------|--------------|
+| `/spec:execute` completion | After implementation | Suggests doc review if changed files touch guide areas |
+| `check-docs-changed` hook | Session end | Reminds about potentially affected guides |
+| `/docs:reconcile` | On demand | Analyzes commits against guide coverage, suggests updates |
+
+Run `/docs:reconcile` periodically or when the session-end hook flags potential drift.
 
 ## Design System: Calm Tech
 
@@ -895,6 +908,12 @@ paths: src/app/api/**/*.ts
 |---------|---------|
 | `/review-recent-work` | Trace through recent implementations to verify correctness |
 
+#### Documentation
+
+| Command | Purpose |
+|---------|---------|
+| `/docs:reconcile` | Check developer guides for drift against recent commits |
+
 #### Debug
 
 | Command | Purpose |
@@ -908,12 +927,15 @@ paths: src/app/api/**/*.ts
 | `/debug:rubber-duck [problem]` | Structured problem articulation using rubber duck methodology |
 | `/debug:performance [area] [--url <url>]` | Diagnose slow renders, bundle size, N+1 queries, memory leaks |
 
-#### IDE
+#### Claude Code Configuration
 
 | Command | Purpose |
 |---------|---------|
-| `/ide:set <color>` | Generate VS Code color scheme from a seed color (hex, rgb, name) |
-| `/ide:reset` | Remove custom color scheme, restore VS Code defaults |
+| `/cc:notify:on` | Enable notification sound when Claude finishes responding |
+| `/cc:notify:off` | Disable notification sound when Claude finishes responding |
+| `/cc:notify:status` | Show notification sound status at user and project levels |
+| `/cc:ide:set <color>` | Set VS Code color scheme from a seed color (hex, rgb, name) |
+| `/cc:ide:reset` | Remove custom VS Code color scheme |
 
 ### Roadmap-Claude Code Integration
 

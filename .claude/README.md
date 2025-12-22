@@ -19,13 +19,13 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Commands | 41 | `.claude/commands/` |
+| Commands | 43 | `.claude/commands/` |
 | Agents | 7 | `.claude/agents/` |
 | Skills | 7 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
-| Hooks | 8 | `.claude/settings.json` |
+| Hooks | 9 | `.claude/settings.json` |
 | MCP Servers | 4 | `.claude/settings.local.json` |
-| Developer Guides | 8 | `developer-guides/` |
+| Developer Guides | 8 + INDEX | `developer-guides/` |
 
 ## Component Types
 
@@ -38,10 +38,11 @@ Slash commands are triggered explicitly by typing `/command`. They're expanded p
 | `spec/` | create, decompose, execute, feedback, doc-update, migrate | Specification workflow |
 | `git/` | commit, push | Version control with validation |
 | `debug/` | browser, types, test, api, data, logs, rubber-duck, performance | Systematic debugging |
+| `docs/` | reconcile | Documentation drift detection |
 | `roadmap/` | show, add, open, close, status, validate, analyze, prioritize, enrich | Product roadmap management |
 | `system/` | ask, update, review, learn | Harness maintenance |
 | `app/` | upgrade, cleanup | Application dependency and code management |
-| `db/` | migrate | Database migrations |
+| `db/` | migrate, studio | Database operations |
 | `dev/` | scaffold | Feature scaffolding |
 | `cc/notify/` | on, off, status | Notification sounds |
 | `cc/ide/` | set, reset | VS Code color schemes |
@@ -111,7 +112,7 @@ Hooks run automatically at lifecycle events. Configured in `settings.json` via C
 | `PreToolUse` | file-guard | Block access to sensitive files (.env, .key, .pem) |
 | `PostToolUse` | typecheck-changed, lint-changed, check-any-changed, test-changed | Validate code after edits |
 | `UserPromptSubmit` | thinking-level | Adjust Claude's thinking mode based on prompt complexity |
-| `Stop` | create-checkpoint, check-todos | Session cleanup and progress tracking |
+| `Stop` | create-checkpoint, check-todos, check-docs-changed | Session cleanup, progress tracking, doc reminders |
 
 ### MCP Servers
 
@@ -130,6 +131,7 @@ Detailed implementation patterns in `developer-guides/`:
 
 | Guide | Content |
 |-------|---------|
+| `INDEX.md` | **Coverage map** — maps code areas to guides, maintenance tracking |
 | `01-project-structure.md` | FSD architecture, file naming, directory layout |
 | `02-environment-variables.md` | T3 Env configuration, adding new variables |
 | `03-database-prisma.md` | Prisma 7, DAL patterns, naming conventions |
@@ -140,6 +142,11 @@ Detailed implementation patterns in `developer-guides/`:
 | `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
 
 Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
+
+**Keeping guides up to date:**
+- `/docs:reconcile` — Check for documentation drift against recent commits
+- `/spec:execute` — Suggests doc review when implementation touches guide areas
+- `check-docs-changed` hook — Session-end reminder for affected guides
 
 ## Architecture
 
@@ -199,7 +206,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 ├── settings.json          # Hooks, permissions, environment
 ├── settings.local.json    # Local overrides, MCP servers
 │
-├── commands/              # Slash commands (40 total)
+├── commands/              # Slash commands (42 total)
 │   ├── app/               # Application maintenance
 │   ├── spec/              # Specification workflow
 │   ├── git/               # Version control
@@ -373,6 +380,28 @@ CLAUDE.md is the **primary source of truth** for project context. This README do
 - Adding significant new commands or agents
 - Changing core workflows
 - Modifying architectural patterns
+
+### With UI Documentation Pages
+
+The template includes interactive documentation at `/system/` that displays harness information to users. These pages must stay synchronized with the actual harness.
+
+| Page | Path | Content |
+|------|------|---------|
+| System Overview | `/system` | Links to design system and Claude Code docs |
+| Claude Code Harness | `/system/claude-code` | Stats, commands, agents, skills, workflows |
+
+**Synchronization**: `/system:update` automatically updates these pages when harness components change. `/system:review` validates that UI pages match the actual harness state.
+
+**Arrays to update in `src/app/system/claude-code/page.tsx`**:
+- `harnessStats` — Component counts
+- `commandNamespaces` — Command namespace listings
+- `agents` — Agent definitions
+- `skills` — Skill definitions
+
+**Update UI pages when**:
+- Adding/removing commands, agents, skills, or rules
+- Changing hook or MCP server counts
+- Modifying core workflows displayed in the UI
 
 ### With Developer Guides
 

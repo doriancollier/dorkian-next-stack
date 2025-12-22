@@ -1083,6 +1083,96 @@ After all tasks are completed:
    ```
 5. The link_spec.py will populate linkedArtifacts with all existing spec file paths
 
+### 8. Documentation Review Check
+
+After all tasks are completed, automatically check if implementation may have affected developer guides:
+
+**How it works:**
+
+1. Read `developer-guides/INDEX.md` to get the pattern-to-guide mapping
+2. Compare files modified during implementation against guide patterns
+3. Surface any guides that may need review
+
+**Implementation:**
+
+```bash
+# Function: check_docs_relevance
+# Checks if implementation touched areas covered by developer guides
+# Args: files_modified (pipe-separated list)
+check_docs_relevance() {
+  local files_modified="$1"
+  local affected_guides=()
+
+  # Pattern mappings from INDEX.md (simplified for bash)
+  # Guide: patterns
+  declare -A GUIDE_PATTERNS=(
+    ["01-project-structure.md"]="src/layers|page.tsx|layout.tsx"
+    ["02-environment-variables.md"]="env.ts|.env|config.ts"
+    ["03-database-prisma.md"]="prisma|entities/*/api|lib/prisma|generated/prisma"
+    ["04-forms-validation.md"]="form|schema|model/types"
+    ["05-data-fetching.md"]="app/api|api/queries|api/mutations|query-client"
+    ["06-state-management.md"]="store|hooks/"
+    ["07-animations.md"]="animation|motion"
+    ["08-styling-theming.md"]="globals.css|shared/ui|components/ui|tailwind"
+  )
+
+  # Check each file against patterns
+  for file in $(echo "$files_modified" | tr '|' '\n'); do
+    for guide in "${!GUIDE_PATTERNS[@]}"; do
+      patterns="${GUIDE_PATTERNS[$guide]}"
+      for pattern in $(echo "$patterns" | tr '|' '\n'); do
+        if echo "$file" | grep -q "$pattern"; then
+          # Add guide to affected list (avoid duplicates)
+          if [[ ! " ${affected_guides[*]} " =~ " ${guide} " ]]; then
+            affected_guides+=("$guide")
+          fi
+        fi
+      done
+    done
+  done
+
+  echo "${affected_guides[@]}"
+}
+
+# Get files modified from implementation summary
+FILES_MODIFIED=$(awk '/^## Files Modified\/Created/,/^## / {print}' "specs/$SLUG/04-implementation.md" | \
+  grep -E "^\s*-" | \
+  sed 's/^\s*- //' | \
+  tr '\n' '|' | \
+  sed 's/|$//')
+
+AFFECTED_GUIDES=$(check_docs_relevance "$FILES_MODIFIED")
+```
+
+**Display to User:**
+
+If any guides may be affected, display:
+
+```
+═══════════════════════════════════════════════════
+              IMPLEMENTATION COMPLETE
+═══════════════════════════════════════════════════
+
+✅ All tasks completed successfully
+
+📚 Documentation Review
+   Files changed touch areas covered by:
+   • 03-database-prisma.md (Prisma patterns, DAL)
+   • 05-data-fetching.md (TanStack Query, API routes)
+
+   These guides may need updates to reflect new patterns.
+
+   Options:
+   • Run /docs:reconcile to check for drift
+   • Run /spec:doc-update specs/<slug>/02-specification.md for full review
+
+═══════════════════════════════════════════════════
+```
+
+If no guides are affected, display a simpler completion message without the documentation section.
+
+**Important:** This is a suggestion, not a blocker. The user can choose to review documentation or skip.
+
 ## If Issues Arise
 
 If any agent encounters problems:
