@@ -30,8 +30,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  // Note: url/directUrl are configured in prisma.config.ts, NOT here
+  provider = "sqlite"  // Use "postgresql" for production
+  url      = env("DATABASE_URL")
 }
 ```
 
@@ -56,12 +56,37 @@ import { PrismaClient } from '@prisma/client'
 Configure `DATABASE_URL` in your `.env` file:
 
 ```bash
-# Local Docker
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/myapp"
+# SQLite (default for local development)
+DATABASE_URL="file:./.data/dev.db"
 
-# Neon.tech (production) - pooled connection
+# PostgreSQL (for production)
 DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
 ```
+
+### Migrating to PostgreSQL
+
+When deploying to production:
+
+1. Update `prisma/schema.prisma`:
+   ```prisma
+   datasource db {
+     provider = "postgresql"
+     url      = env("DATABASE_URL")
+   }
+   ```
+
+2. Set production `DATABASE_URL` to PostgreSQL connection string
+
+3. Run migrations:
+   ```bash
+   pnpm prisma:generate
+   pnpm prisma db push
+   ```
+
+**SQLite limitations to note:**
+- Enums stored as TEXT (no database-level validation)
+- No `@db.Text` or PostgreSQL-specific column types
+- Single-writer concurrency (fine for local dev)
 
 ## Singleton Pattern
 
@@ -90,7 +115,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 ## Naming Conventions (Snake Case)
 
-PostgreSQL works best with lowercase snake_case identifiers. We use Prisma's `@map` and `@@map` attributes to maintain idiomatic naming in both layers:
+Both SQLite and PostgreSQL work best with lowercase snake_case identifiers. We use Prisma's `@map` and `@@map` attributes to maintain idiomatic naming in both layers:
 
 | Layer | Convention | Example |
 |-------|------------|---------|
@@ -326,9 +351,24 @@ export async function createOrderWithItems(data: CreateOrderInput) {
 }
 ```
 
-## Local Development with Docker
+## Local Development
 
-For local development, run Postgres in Docker:
+SQLite requires no setup - the database file is created automatically at `.data/dev.db`.
+
+```bash
+# Create/update database schema
+pnpm prisma db push
+
+# Reset database (delete and recreate)
+rm .data/dev.db && pnpm prisma db push
+
+# View database in Prisma Studio
+pnpm prisma:studio
+```
+
+### Using Docker PostgreSQL (Optional)
+
+If you need PostgreSQL locally (to match production):
 
 ```bash
 # Create and start Postgres
@@ -341,10 +381,11 @@ docker run -d \
   -v postgres_data:/var/lib/postgresql/data \
   postgres:17
 
-# Stop Postgres
-docker stop postgres
+# Update schema.prisma to use postgresql
+# Update .env: DATABASE_URL="postgresql://postgres:postgres@localhost:5432/myapp"
 
-# Start Postgres
+# Stop/start Postgres
+docker stop postgres
 docker start postgres
 
 # Connect via psql
@@ -370,14 +411,21 @@ This error occurs when:
 2. `dotenv/config` isn't imported at the top of the config file
 3. The `.env` file doesn't exist or `DATABASE_URL` isn't set
 
-### Connection refused to localhost:5432
+### Connection refused to localhost:5432 (PostgreSQL only)
 
-Make sure Docker Postgres is running:
+If using Docker PostgreSQL, make sure it's running:
 ```bash
 docker ps | grep postgres
 # If not running:
 docker start postgres
 ```
+
+### SQLite database locked
+
+SQLite only supports one writer at a time. If you see "database is locked":
+- Close Prisma Studio if open
+- Ensure no other process is writing to the database
+- Restart your dev server
 
 ### Schema drift
 
@@ -399,6 +447,7 @@ pnpm prisma:generate
 |------|-------|
 | Schema | `prisma/schema.prisma` |
 | Config | `prisma.config.ts` (project root) |
+| SQLite database | `.data/dev.db` (gitignored) |
 | Migrations | `prisma/migrations/` |
 | Generated client | `src/generated/prisma/` |
 | Prisma singleton | `src/lib/prisma.ts` |

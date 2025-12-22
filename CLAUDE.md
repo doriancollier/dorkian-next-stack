@@ -679,11 +679,36 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
 
 ## Database
 
-- Uses Neon.tech PostgreSQL (serverless)
-- Connection pooling via `DATABASE_URL`
-- Direct connection via `DIRECT_URL` (for migrations)
+- **Local development**: SQLite (file-based, zero setup)
+- **Production**: Migrate to PostgreSQL (see migration guide below)
+- Database file: `.data/dev.db` (gitignored, follows `.logs/` and `.temp/` pattern)
 - Singleton pattern in `src/lib/prisma.ts`
 - **Naming convention**: Models use `@@map("snake_case")`, fields use `@map("snake_case")` — see `developer-guides/03-database-prisma.md`
+
+### Migrating to PostgreSQL
+
+When deploying to production, update the database provider:
+
+1. **Update `prisma/schema.prisma`:**
+   ```prisma
+   datasource db {
+     provider = "postgresql"
+     url      = env("DATABASE_URL")
+   }
+   ```
+
+2. **Update `.env` with PostgreSQL URL:**
+   ```
+   DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
+   ```
+
+3. **Regenerate and migrate:**
+   ```bash
+   pnpm prisma:generate
+   pnpm prisma db push  # or prisma migrate dev
+   ```
+
+**Note**: SQLite doesn't support native enums (stored as TEXT). If using enums, test thoroughly after migrating to PostgreSQL.
 
 ### MCP Database Server (Development Only)
 
@@ -812,6 +837,7 @@ paths: src/app/api/**/*.ts
 |---------|---------|
 | `/dev:scaffold <name>` | Create new feature with page, components, schema |
 | `/db:migrate` | Apply pending Prisma migrations safely |
+| `/db:studio` | Open Prisma Studio to explore the database |
 
 #### Application
 

@@ -3,8 +3,8 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().url(),
-    DIRECT_URL: z.string().url().optional(),
+    // Accepts both PostgreSQL URLs and SQLite file paths (file:./path/to/db.sqlite)
+    DATABASE_URL: z.string().min(1),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
     // MCP Database Server (development only)
