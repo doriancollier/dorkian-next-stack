@@ -195,7 +195,7 @@ export default function PatternsPage() {
                     <Search />
                   </EmptyMedia>
                   <EmptyTitle>No results found</EmptyTitle>
-                  <EmptyDescription>Try adjusting your search or filter to find what you're looking for.</EmptyDescription>
+                  <EmptyDescription>Try adjusting your search or filter to find what you&apos;re looking for.</EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
                   <Button variant="outline" size="sm">Clear filters</Button>
@@ -365,7 +365,7 @@ export default function PatternsPage() {
                     <CardTitle className="text-base">{type}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">{Math.floor(Math.random() * 100)}</p>
+                    <p className="text-2xl font-bold">42</p>
                     <p className="text-xs text-muted-foreground">files</p>
                   </CardContent>
                 </Card>
@@ -442,7 +442,7 @@ export default function PatternsPage() {
                     <Inbox />
                   </EmptyMedia>
                   <EmptyTitle>No messages</EmptyTitle>
-                  <EmptyDescription>You don't have any messages yet.</EmptyDescription>
+                  <EmptyDescription>You don&apos;t have any messages yet.</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             </CardContent>
