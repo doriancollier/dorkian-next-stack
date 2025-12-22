@@ -13,6 +13,7 @@ A production-ready Next.js 16 boilerplate with modern tooling, type safety, and 
 | TypeScript | 5.9+ | Type safety |
 | Tailwind CSS | 4.x | CSS-first styling |
 | Shadcn UI + Base UI | Latest | Component library (via basecn) |
+| BetterAuth | 1.x | Passwordless authentication (Email OTP) |
 | Prisma | 7.x | Database ORM |
 | TanStack Query | 5.90+ | Server state management |
 | React Hook Form | 7.68+ | Form handling |
@@ -747,6 +748,65 @@ Direct database access is available via MCP tools for debugging and verification
 - Validate foreign key relationships
 - Test raw SQL queries before implementing in DAL
 - Analyze query performance with EXPLAIN
+
+## Authentication
+
+This project uses **BetterAuth** with Email OTP (passwordless) authentication. Users sign in by entering their email, receiving a 6-digit code, and verifying it to create a session.
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/auth.ts` | Server-side BetterAuth configuration |
+| `src/lib/auth-client.ts` | Client-side auth utilities (`useSession`, `authClient`) |
+| `src/layers/shared/api/auth.ts` | Auth utilities for DAL and server components |
+| `src/layers/features/auth/` | Auth UI components (SignInForm, OtpVerifyForm, SignOutButton) |
+| `src/app/(authenticated)/` | Protected route group |
+
+### Auth Utilities
+
+| Function | Returns | Use Case |
+|----------|---------|----------|
+| `getCurrentUser()` | `User \| null` | Check if user is authenticated |
+| `requireAuth()` | `User` | DAL functions - throws if not authenticated |
+| `requireAuthOrRedirect()` | `Session` | Server components - redirects to `/sign-in` |
+| `getSession()` | `Session \| null` | Get full session with metadata |
+
+### Route Protection
+
+Protected pages use the `(authenticated)/` route group with a layout that calls `requireAuthOrRedirect()`. Unauthenticated users are redirected to `/sign-in`.
+
+```typescript
+// src/app/(authenticated)/layout.tsx
+import { requireAuthOrRedirect } from '@/layers/shared/api/auth'
+
+export default async function AuthenticatedLayout({ children }) {
+  await requireAuthOrRedirect() // Redirects if not authenticated
+  return <>{children}</>
+}
+```
+
+### Client-Side Auth
+
+```typescript
+'use client'
+import { useSession, authClient } from '@/lib/auth-client'
+
+function MyComponent() {
+  const { data: session, isPending } = useSession()
+
+  // Sign out
+  await authClient.signOut()
+}
+```
+
+### Configuration
+
+- **Session duration**: 7 days with automatic refresh
+- **OTP settings**: 6 digits, 5-minute expiry
+- **Email delivery**: Console logging in development (swap for Resend in production)
+
+See `developer-guides/09-authentication.md` for complete documentation.
 
 ## Claude Code Customization
 

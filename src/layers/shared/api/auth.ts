@@ -1,24 +1,46 @@
-import { prisma } from '@/lib/prisma'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
 import { UnauthorizedError } from './errors'
 
-export interface User {
+export type User = {
   id: string
   email: string
-  name: string | null
+  name: string // Required by BetterAuth
+  image: string | null
+  emailVerified: boolean
   createdAt: Date
   updatedAt: Date
 }
 
-/**
- * Get the current user
- * Note: This boilerplate uses single-user mode. Replace with your auth system.
- */
-export async function getCurrentUser(): Promise<User | null> {
-  return prisma.user.findFirst()
+export type Session = {
+  user: User
+  session: {
+    id: string
+    userId: string
+    token: string
+    expiresAt: Date
+    ipAddress: string | null
+    userAgent: string | null
+    createdAt: Date
+    updatedAt: Date
+  }
 }
 
 /**
- * Require authentication - throws if no user exists
+ * Get the current authenticated user
+ * Returns null if not authenticated
+ */
+export async function getCurrentUser(): Promise<User | null> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  return (session?.user as User) ?? null
+}
+
+/**
+ * Require authentication - throws if no valid session
+ * Use in DAL functions and server actions
  */
 export async function requireAuth(): Promise<User> {
   const user = await getCurrentUser()
@@ -31,38 +53,27 @@ export async function requireAuth(): Promise<User> {
 }
 
 /**
- * Get or create default user (single-user mode)
- * Replace this with your actual auth system in production.
- * Handles race conditions when multiple requests come in simultaneously.
+ * Require authentication with redirect - for use in server components
+ * Redirects to sign-in page if not authenticated
  */
-export async function getOrCreateDefaultUser(): Promise<User> {
-  const existingUser = await getCurrentUser()
+export async function requireAuthOrRedirect(): Promise<Session> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
 
-  if (existingUser) {
-    return existingUser
+  if (!session) {
+    redirect('/sign-in')
   }
 
-  try {
-    return await prisma.user.create({
-      data: {
-        email: 'user@local',
-        name: 'Default User',
-      },
-    })
-  } catch (error) {
-    // If unique constraint violation (P2002), another request created the user
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error as { code: string }).code === 'P2002'
-    ) {
-      const user = await prisma.user.findUnique({
-        where: { email: 'user@local' },
-      })
-      if (user) {
-        return user
-      }
-    }
-    throw error
-  }
+  return session as Session
+}
+
+/**
+ * Get full session data (user + session metadata)
+ */
+export async function getSession(): Promise<Session | null> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  return session as Session | null
 }

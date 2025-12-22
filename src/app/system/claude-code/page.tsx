@@ -21,11 +21,11 @@ import {
 } from 'lucide-react'
 
 const harnessStats = [
-  { label: 'Commands', value: '41', icon: Terminal },
+  { label: 'Commands', value: '43', icon: Terminal },
   { label: 'Agents', value: '7', icon: Bot },
   { label: 'Skills', value: '7', icon: Sparkles },
   { label: 'Rules', value: '5', icon: Shield },
-  { label: 'Hooks', value: '8', icon: Zap },
+  { label: 'Hooks', value: '9', icon: Zap },
   { label: 'MCP Servers', value: '4', icon: Settings },
 ]
 
@@ -59,6 +59,26 @@ const commandNamespaces = [
     namespace: 'app/',
     description: 'Application maintenance',
     commands: ['upgrade', 'cleanup'],
+  },
+  {
+    namespace: 'db/',
+    description: 'Database operations',
+    commands: ['migrate', 'studio'],
+  },
+  {
+    namespace: 'dev/',
+    description: 'Feature scaffolding',
+    commands: ['scaffold'],
+  },
+  {
+    namespace: 'docs/',
+    description: 'Documentation maintenance',
+    commands: ['reconcile'],
+  },
+  {
+    namespace: 'cc/',
+    description: 'Claude Code configuration',
+    commands: ['notify:on', 'notify:off', 'notify:status', 'ide:set', 'ide:reset'],
   },
 ]
 
@@ -274,7 +294,7 @@ export default function ClaudeCodePage() {
           Commands
         </h2>
         <p className="text-sm text-muted-foreground">
-          41 slash commands organized by namespace. Type{' '}
+          43 slash commands organized by namespace. Type{' '}
           <code className="bg-muted px-1 py-0.5 rounded text-xs">/command</code>{' '}
           in Claude Code to invoke.
         </p>

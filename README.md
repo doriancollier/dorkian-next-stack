@@ -64,12 +64,41 @@ A production-ready Next.js 16 boilerplate with modern tooling, type safety, and 
 | `pnpm prisma:push` | Push schema to database |
 | `pnpm prisma:studio` | Open Prisma Studio |
 
+## Authentication
+
+This project uses BetterAuth with Email OTP for passwordless authentication.
+
+### Setup
+
+1. Generate a secret:
+   ```bash
+   openssl rand -base64 32
+   ```
+
+2. Add to `.env`:
+   ```bash
+   BETTER_AUTH_SECRET="your-generated-secret"
+   BETTER_AUTH_URL="http://localhost:3000"
+   ```
+
+3. Run database migrations:
+   ```bash
+   pnpm prisma db push
+   ```
+
+### Development
+
+OTP codes are logged to the server console in development. Check the terminal running `pnpm dev` for codes.
+
+See [developer-guides/09-authentication.md](./developer-guides/09-authentication.md) for detailed documentation.
+
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string (pooled) | Yes |
-| `DIRECT_URL` | Direct PostgreSQL connection | No |
+| `DATABASE_URL` | SQLite or PostgreSQL connection | Yes |
+| `BETTER_AUTH_SECRET` | 32+ char secret for auth tokens | Yes |
+| `BETTER_AUTH_URL` | Auth base URL | No |
 | `NEXT_PUBLIC_APP_URL` | Application URL | Yes |
 
 ## Project Structure

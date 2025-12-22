@@ -17,6 +17,7 @@ import {
   Sparkles,
   FileCode,
   Zap,
+  KeyRound,
 } from 'lucide-react'
 
 const systemSections = [
@@ -63,6 +64,12 @@ const developerGuides = [
     href: '/developer-guides/05-data-fetching.md',
     icon: Zap,
   },
+  {
+    title: 'Authentication',
+    description: 'BetterAuth with Email OTP, session management',
+    href: '/developer-guides/09-authentication.md',
+    icon: KeyRound,
+  },
 ]
 
 const techStack = [
@@ -71,6 +78,7 @@ const techStack = [
   { name: 'TypeScript 5.9+', description: 'Full type safety' },
   { name: 'Tailwind CSS v4', description: 'CSS-first configuration' },
   { name: 'Shadcn UI', description: '70+ accessible components' },
+  { name: 'BetterAuth', description: 'Passwordless Email OTP authentication' },
   { name: 'Prisma 7', description: 'Type-safe database ORM' },
   { name: 'TanStack Query', description: 'Server state management' },
   { name: 'Zod 4', description: 'Schema validation' },

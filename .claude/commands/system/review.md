@@ -29,6 +29,7 @@ Review Claude Code processes (commands, agents, hooks, configuration) for clarit
 | **Rules** | `/.claude/rules/*.md` | Path patterns, content relevance, no overlaps |
 | **Hooks** | `/.claude/settings.json` | Hook configuration, lifecycle events |
 | **Developer Guides** | `/developer-guides/*.md` | Patterns, best practices |
+| **UI Documentation** | `/src/app/system/**/*.tsx` | Stats accuracy, component lists, content currency |
 
 ## Order of Operations
 
@@ -385,6 +386,15 @@ Execute these steps sequentially. This is an **interactive review** - ask questi
 - [ ] Developer guide references are valid
 - [ ] Examples work correctly
 
+### For UI Documentation Pages (`src/app/system/`)
+- [ ] `harnessStats` array counts match actual file counts in `.claude/`
+- [ ] `commandNamespaces` array lists all command namespaces accurately
+- [ ] `agents` array matches actual agents in `.claude/agents/`
+- [ ] `skills` array matches actual skills in `.claude/skills/`
+- [ ] Content matches `.claude/README.md` (single source of truth)
+- [ ] No stale or removed components listed
+- [ ] File paths in UI are correct
+
 ## Cross-Reference Validation
 
 Check these relationships:
@@ -410,6 +420,11 @@ Rules ←→ Rules (do path patterns overlap? Is there conflict?)
 Rules ←→ CLAUDE.md (does rule content duplicate CLAUDE.md content?)
 Rules ←→ Developer Guides (is there duplication of patterns?)
 Hooks ←→ Lifecycle events (does hook use appropriate event?)
+
+# UI Documentation Synchronization
+UI Pages ←→ README.md (do stats and component lists match?)
+UI Pages ←→ Actual Files (do counts match file system?)
+UI Pages ←→ CLAUDE.md (is displayed info consistent?)
 ```
 
 ### Architecture-Specific Validations

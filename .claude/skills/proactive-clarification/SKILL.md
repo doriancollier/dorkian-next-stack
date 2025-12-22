@@ -1,10 +1,6 @@
 ---
-description: Proactively analyze user prompts, identify gaps, and ask clarifying questions before diving into work
-triggers:
-  - user submits vague or ambiguous requests
-  - requests lack clear acceptance criteria
-  - scope boundaries are undefined
-  - hidden complexity is detected
+name: proactive-clarification
+description: Proactively analyze user prompts, identify gaps, and ask clarifying questions before diving into work. Use when user submits vague or ambiguous requests, requests lack clear acceptance criteria, scope boundaries are undefined, or hidden complexity is detected.
 ---
 
 # Proactive Clarification

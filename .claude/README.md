@@ -25,7 +25,7 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 | Rules | 5 | `.claude/rules/` |
 | Hooks | 9 | `.claude/settings.json` |
 | MCP Servers | 4 | `.claude/settings.local.json` |
-| Developer Guides | 8 + INDEX | `developer-guides/` |
+| Developer Guides | 9 + INDEX | `developer-guides/` |
 
 ## Component Types
 
@@ -140,6 +140,7 @@ Detailed implementation patterns in `developer-guides/`:
 | `06-state-management.md` | Zustand vs TanStack Query decision guide |
 | `07-animations.md` | Motion library patterns |
 | `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
+| `09-authentication.md` | BetterAuth, sessions, OTP patterns |
 
 Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
 
@@ -206,7 +207,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 ├── settings.json          # Hooks, permissions, environment
 ├── settings.local.json    # Local overrides, MCP servers
 │
-├── commands/              # Slash commands (42 total)
+├── commands/              # Slash commands (43 total)
 │   ├── app/               # Application maintenance
 │   ├── spec/              # Specification workflow
 │   ├── git/               # Version control

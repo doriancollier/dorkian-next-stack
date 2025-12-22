@@ -44,3 +44,7 @@ coverage/
 # roadmap server runtime files
 roadmap/.server.pid
 roadmap/.server.port.claude/projects/
+
+# Simple Task Master - User tasks are git-ignored
+.simple-task-master/tasks/
+.simple-task-master/lock

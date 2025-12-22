@@ -374,6 +374,28 @@ These rules apply to [description of what files/patterns].
   - The change affects core project conventions
   - The change should be visible to all AI assistants
 
+- [ ] **4.5** Update UI documentation pages if the change affects harness components:
+
+  **When to update**: Changes to commands, agents, skills, or rules require updating `src/app/system/claude-code/page.tsx`
+
+  **What to update**:
+  - `harnessStats` array - Update counts (Commands, Agents, Skills, Rules, Hooks, MCP Servers)
+  - `commandNamespaces` array - Add/remove/modify command entries
+  - `agents` array - Add/remove/modify agent entries
+  - `skills` array - Add/remove/modify skill entries
+
+  **How to update**:
+  1. Read current `src/app/system/claude-code/page.tsx`
+  2. Count actual components:
+     ```bash
+     echo "Commands: $(find .claude/commands -name '*.md' -type f | wc -l)"
+     echo "Agents: $(find .claude/agents -name '*.md' -type f | wc -l)"
+     echo "Skills: $(find .claude/skills -name 'SKILL.md' -type f | wc -l)"
+     echo "Rules: $(find .claude/rules -name '*.md' -type f | wc -l)"
+     ```
+  3. Update the relevant arrays to match
+  4. Ensure consistency with `.claude/README.md` inventory
+
 ### Phase 5: Batch Confirmation
 
 - [ ] **5.1** Before writing any files, present the batch:

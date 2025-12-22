@@ -441,6 +441,110 @@ Regenerate types:
 pnpm prisma:generate
 ```
 
+## BetterAuth Models
+
+The project uses BetterAuth for authentication, which requires these models:
+
+| Model | Purpose |
+|-------|---------|
+| `User` | User accounts with email, name, image |
+| `Session` | Active login sessions (7-day expiry) |
+| `Account` | OAuth provider connections (future) |
+| `Verification` | OTP codes and verification tokens |
+
+### Schema Definition
+
+```prisma
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @map("email_verified")
+  image         String?
+  createdAt     DateTime  @map("created_at")
+  updatedAt     DateTime  @map("updated_at")
+
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at")
+  token     String
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @map("created_at")
+  updatedAt             DateTime  @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime  @map("expires_at")
+  createdAt  DateTime? @map("created_at")
+  updatedAt  DateTime? @map("updated_at")
+
+  @@map("verifications")
+}
+```
+
+### Working with Auth Models
+
+Auth models are managed by BetterAuth - don't modify them directly via Prisma except for:
+- Reading user data in DAL functions
+- Admin operations (viewing sessions, clearing verifications)
+
+```typescript
+// Reading user in DAL (correct)
+import { getCurrentUser } from '@/layers/shared/api/auth'
+
+export async function getUserProfile() {
+  const user = await getCurrentUser()
+  if (!user) return null
+
+  return prisma.user.findUnique({
+    where: { id: user.id },
+    select: { id: true, email: true, name: true, image: true }
+  })
+}
+
+// Creating users (wrong - use BetterAuth sign-up flow)
+await prisma.user.create({ data: { ... } })  // Don't do this
+```
+
+See `developer-guides/09-authentication.md` for complete authentication patterns.
+
 ## File Locations
 
 | What | Where |
@@ -453,3 +557,4 @@ pnpm prisma:generate
 | Prisma singleton | `src/lib/prisma.ts` |
 | DAL functions | `src/layers/entities/*/api/` |
 | Auth utilities | `src/layers/shared/api/auth.ts` |
+| Auth configuration | `src/lib/auth.ts` |

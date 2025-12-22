@@ -18,6 +18,7 @@ This file maps code areas to their relevant developer guides. It serves three pu
 | [06-state-management.md](./06-state-management.md) | Zustand stores, client state patterns | `**/*store*.ts`, `**/model/store.ts`, `src/hooks/**` |
 | [07-animations.md](./07-animations.md) | Motion library patterns, transitions | `**/*animation*.ts`, `**/*motion*.tsx`, components with `motion.` |
 | [08-styling-theming.md](./08-styling-theming.md) | Tailwind v4, Shadcn UI, theming | `src/app/globals.css`, `src/layers/shared/ui/**`, `src/components/ui/**`, `tailwind.config.*` |
+| [09-authentication.md](./09-authentication.md) | BetterAuth, sessions, OTP, auth utilities | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/layers/shared/api/auth.ts`, `src/app/(auth)/**`, `src/app/api/auth/**` |
 
 ## Pattern Matching Reference
 
@@ -133,6 +134,24 @@ keywords:
   - "cva("
   - "Shadcn"
   - "className"
+
+# Guide: 09-authentication.md
+patterns:
+  - "src/lib/auth.ts"
+  - "src/lib/auth-client.ts"
+  - "src/layers/shared/api/auth.ts"
+  - "src/app/(auth)/**"
+  - "src/app/api/auth/**"
+  - "src/layers/features/auth/**"
+keywords:
+  - "BetterAuth"
+  - "auth"
+  - "session"
+  - "signIn"
+  - "signOut"
+  - "getCurrentUser"
+  - "requireAuth"
+  - "OTP"
 ```
 
 ## Maintenance Tracking
@@ -140,13 +159,14 @@ keywords:
 | Guide | Last Reviewed | Reviewed By | Notes |
 |-------|--------------|-------------|-------|
 | 01-project-structure.md | 2025-12-22 | Initial | Created with project |
-| 02-environment-variables.md | 2025-12-22 | Initial | Created with project |
-| 03-database-prisma.md | 2025-12-22 | Initial | Created with project |
+| 02-environment-variables.md | 2025-12-22 | Claude | Reconciled: added auth + MCP variables |
+| 03-database-prisma.md | 2025-12-22 | Claude | Reconciled: added BetterAuth models section |
 | 04-forms-validation.md | 2025-12-22 | Initial | Created with project |
 | 05-data-fetching.md | 2025-12-22 | Initial | Created with project |
 | 06-state-management.md | 2025-12-22 | Initial | Created with project |
 | 07-animations.md | 2025-12-22 | Initial | Created with project |
 | 08-styling-theming.md | 2025-12-22 | Initial | Created with project |
+| 09-authentication.md | 2025-12-22 | Claude | Added: BetterAuth OTP authentication guide |
 
 ## How to Use This Index
 
