@@ -158,15 +158,15 @@ keywords:
 
 | Guide | Last Reviewed | Reviewed By | Notes |
 |-------|--------------|-------------|-------|
-| 01-project-structure.md | 2025-12-22 | Initial | Created with project |
-| 02-environment-variables.md | 2025-12-22 | Claude | Reconciled: added auth + MCP variables |
-| 03-database-prisma.md | 2025-12-22 | Claude | Reconciled: added BetterAuth models section |
-| 04-forms-validation.md | 2025-12-22 | Initial | Created with project |
-| 05-data-fetching.md | 2025-12-22 | Initial | Created with project |
-| 06-state-management.md | 2025-12-22 | Initial | Created with project |
-| 07-animations.md | 2025-12-22 | Initial | Created with project |
-| 08-styling-theming.md | 2025-12-22 | Initial | Created with project |
-| 09-authentication.md | 2025-12-22 | Claude | Added: BetterAuth OTP authentication guide |
+| 01-project-structure.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 02-environment-variables.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 03-database-prisma.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 04-forms-validation.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 05-data-fetching.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 06-state-management.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 07-animations.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 08-styling-theming.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
+| 09-authentication.md | 2025-12-22 | Claude | Created with AI-optimized format (already follows template) |
 
 ## How to Use This Index
 

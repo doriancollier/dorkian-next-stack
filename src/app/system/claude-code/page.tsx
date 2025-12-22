@@ -23,7 +23,7 @@ import {
 const harnessStats = [
   { label: 'Commands', value: '43', icon: Terminal },
   { label: 'Agents', value: '7', icon: Bot },
-  { label: 'Skills', value: '7', icon: Sparkles },
+  { label: 'Skills', value: '8', icon: Sparkles },
   { label: 'Rules', value: '5', icon: Shield },
   { label: 'Hooks', value: '9', icon: Zap },
   { label: 'MCP Servers', value: '4', icon: Settings },
@@ -155,6 +155,11 @@ const skills = [
     name: 'managing-roadmap-moscow',
     description: 'MoSCoW prioritization, roadmap utilities',
     trigger: 'Product planning',
+  },
+  {
+    name: 'writing-developer-guides',
+    description: 'Developer guide structure for AI agents',
+    trigger: 'Creating/updating guides',
   },
 ]
 

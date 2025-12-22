@@ -21,7 +21,7 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 |-----------|-------|----------|
 | Commands | 43 | `.claude/commands/` |
 | Agents | 7 | `.claude/agents/` |
-| Skills | 7 | `.claude/skills/` |
+| Skills | 8 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
 | Hooks | 9 | `.claude/settings.json` |
 | MCP Servers | 4 | `.claude/settings.local.json` |
@@ -90,6 +90,7 @@ Skills provide reusable expertise that Claude applies automatically when relevan
 | `organizing-fsd-architecture` | Feature-Sliced Design, layer organization | Structuring features, file placement, imports |
 | `working-with-prisma` | Prisma 7 patterns, DAL conventions | Schema design, database queries, migrations |
 | `managing-roadmap-moscow` | MoSCoW prioritization, roadmap utilities | Product planning, prioritization decisions |
+| `writing-developer-guides` | Developer guide structure for AI agents | Creating/updating files in developer-guides/ |
 
 ### Rules (Path-Triggered)
 
@@ -243,7 +244,8 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── styling-with-tailwind-shadcn/
 │   ├── organizing-fsd-architecture/
 │   ├── working-with-prisma/
-│   └── managing-roadmap-moscow/
+│   ├── managing-roadmap-moscow/
+│   └── writing-developer-guides/
 │
 └── rules/                 # Path-specific guidance (5 total)
     ├── api.md             # API route handlers

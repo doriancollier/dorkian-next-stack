@@ -1,12 +1,39 @@
 # Database & Prisma Guide
 
-## Prisma 7 Configuration
+## Overview
 
-This project uses **Prisma 7** with the Rust-free client engine for smaller bundles.
+This project uses Prisma 7 with a Data Access Layer (DAL) pattern to manage database operations. All database queries must go through entity-specific DAL functions to enforce authorization and maintain consistent patterns.
 
-### Required Files
+## Key Files
 
-Prisma 7 requires a `prisma.config.ts` file in your **project root** (not in `prisma/`):
+| Concept | Location |
+|---------|----------|
+| Prisma config | `prisma.config.ts` (project root) |
+| Schema definition | `prisma/schema.prisma` |
+| Prisma singleton | `src/lib/prisma.ts` |
+| Auth utilities | `src/layers/shared/api/auth.ts` |
+| DAL functions | `src/layers/entities/*/api/` |
+| SQLite database | `.data/dev.db` (gitignored) |
+| Generated client | `src/generated/prisma/` |
+
+## When to Use What
+
+| Scenario | Approach | Why |
+|----------|----------|-----|
+| Read single record | `findUnique()` with `where: { id }` or unique field | Fastest, uses unique index |
+| Read with non-unique field | `findFirst()` with `where` clause | Returns first match |
+| Read all matching | `findMany()` with `where`, `orderBy`, `take` | Supports filtering, pagination |
+| Fetch only needed fields | Use `select: { field: true }` | Reduces data transfer, hides sensitive fields |
+| Fetch with relations | Use `include: { relation: true }` | Loads related data in one query |
+| Multi-step write operation | Use `$transaction()` | Ensures atomicity (all or nothing) |
+| Large result sets | Cursor-based pagination with `cursor`, `take` | More efficient than offset pagination |
+| Check if exists | `count()` with `where` or `findUnique()` | `count()` for multiple, `findUnique()` for single |
+
+## Core Patterns
+
+### Prisma 7 Configuration
+
+Prisma 7 requires a config file in your project root:
 
 ```typescript
 // prisma.config.ts (in project root)
@@ -18,15 +45,14 @@ export default defineConfig({
 })
 ```
 
-### Schema Configuration
-
-The schema file at `prisma/schema.prisma`:
+### Schema Setup
 
 ```prisma
+// prisma/schema.prisma
 generator client {
-  provider   = "prisma-client"           // NOT "prisma-client-js"
+  provider   = "prisma-client"           // Prisma 7 - NOT "prisma-client-js"
   output     = "../src/generated/prisma" // Required in Prisma 7
-  engineType = "client"                  // Rust-free client
+  engineType = "client"                  // Rust-free for smaller bundles
 }
 
 datasource db {
@@ -35,27 +61,10 @@ datasource db {
 }
 ```
 
-**Key Prisma 7 changes:**
-- `provider = "prisma-client"` (not `prisma-client-js`)
-- `output` is required (no default location)
-- `engineType = "client"` for smaller bundles
-- Database URL configured in `prisma.config.ts`, not in schema
-
-### Import Path
-
-```typescript
-// ✅ Correct for Prisma 7
-import { PrismaClient } from '@/generated/prisma'
-
-// ❌ Wrong - old Prisma 6 pattern
-import { PrismaClient } from '@prisma/client'
-```
-
-## Database Connection
-
-Configure `DATABASE_URL` in your `.env` file:
+### Database Connection
 
 ```bash
+# .env
 # SQLite (default for local development)
 DATABASE_URL="file:./.data/dev.db"
 
@@ -63,34 +72,7 @@ DATABASE_URL="file:./.data/dev.db"
 DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
 ```
 
-### Migrating to PostgreSQL
-
-When deploying to production:
-
-1. Update `prisma/schema.prisma`:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
-
-2. Set production `DATABASE_URL` to PostgreSQL connection string
-
-3. Run migrations:
-   ```bash
-   pnpm prisma:generate
-   pnpm prisma db push
-   ```
-
-**SQLite limitations to note:**
-- Enums stored as TEXT (no database-level validation)
-- No `@db.Text` or PostgreSQL-specific column types
-- Single-writer concurrency (fine for local dev)
-
-## Singleton Pattern
-
-The Prisma client uses a singleton pattern to prevent connection exhaustion:
+### Prisma Singleton
 
 ```typescript
 // src/lib/prisma.ts
@@ -111,229 +93,131 @@ if (process.env.NODE_ENV !== 'production') {
 }
 ```
 
-**Important:** This file should ONLY be imported by DAL functions in `entities/*/api/`.
+**Important**: Only import `prisma` in DAL functions (`entities/*/api/`), never in Server Components, Actions, or API Routes.
 
-## Naming Conventions (Snake Case)
+### Naming Conventions (Snake Case Mapping)
 
-Both SQLite and PostgreSQL work best with lowercase snake_case identifiers. We use Prisma's `@map` and `@@map` attributes to maintain idiomatic naming in both layers:
-
-| Layer | Convention | Example |
-|-------|------------|---------|
-| Prisma models | PascalCase | `BlogPost` |
-| Prisma fields | camelCase | `authorId` |
-| PostgreSQL tables | snake_case | `blog_posts` |
-| PostgreSQL columns | snake_case | `author_id` |
-
-### Model Mapping Example
+Both SQLite and PostgreSQL work best with lowercase snake_case identifiers. Use `@map` and `@@map` to maintain idiomatic naming:
 
 ```prisma
 model BlogPost {
   id          String   @id @default(cuid())
-  authorId    String   @map("author_id")
-  title       String
+  authorId    String   @map("author_id")      // Multi-word fields get @map
+  title       String                          // Single-word fields skip @map
   publishedAt DateTime? @map("published_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   author User @relation(fields: [authorId], references: [id])
 
-  @@map("blog_posts")
+  @@map("blog_posts")  // Every model gets @@map for table name
 }
 
 enum PostStatus {
-  DRAFT     @map("draft")
+  DRAFT     @map("draft")      // Enum values get @map to lowercase
   PUBLISHED @map("published")
   ARCHIVED  @map("archived")
 }
 ```
 
-### Mapping Rules
+**Mapping rules:**
+1. Every model: `@@map("snake_case_plural")`
+2. Multi-word fields: `@map("snake_case")`
+3. Single-word fields: skip `@map`
+4. Enum values: `@map("lowercase")`
 
-1. **Every model** gets `@@map("snake_case_plural")` at the end
-   - `User` → `@@map("users")`
-   - `BlogPost` → `@@map("blog_posts")`
-   - `Comment` → `@@map("comments")`
-
-2. **Multi-word fields** get `@map("snake_case")`
-   - `authorId` → `@map("author_id")`
-   - `createdAt` → `@map("created_at")`
-   - `publishedAt` → `@map("published_at")`
-
-3. **Skip `@map`** for single-word lowercase fields
-   - `id`, `name`, `email`, `title` — no mapping needed
-
-4. **Enum values** use `@map` to lowercase them
-   - `ACTIVE` → `@map("active")`
-   - `PENDING_EXPIRATION` → `@map("pending_expiration")`
-
-## Data Access Layer (DAL)
-
-**All Prisma operations must go through the DAL.** Never import Prisma directly in Server Components, Actions, or API Routes.
-
-### DAL Structure (per entity)
-
-```
-src/layers/entities/user/
-├── api/
-│   ├── queries.ts      # Read operations
-│   ├── mutations.ts    # Write operations
-│   └── index.ts        # Re-exports
-├── model/
-│   └── types.ts        # Zod schemas, TypeScript types
-└── index.ts            # Public API
-```
-
-### Query Pattern
+### DAL Query Pattern
 
 ```typescript
 // entities/user/api/queries.ts
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/layers/shared/api/auth'
+import type { User } from '../model/types'
 
-export async function getUserById(id: string) {
+export async function getUserById(id: string): Promise<User | null> {
   const currentUser = await getCurrentUser()
 
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, email: true, name: true }
+    // Only fetch needed fields to avoid exposing sensitive data
+    select: { id: true, email: true, name: true, image: true }
   })
 
   if (!user) return null
 
-  // Enforce authorization
+  // Enforce authorization - throw for forbidden, return null for not found
   if (user.id !== currentUser?.id && !currentUser?.isAdmin) {
-    throw new Error('Unauthorized')
+    throw new Error('Unauthorized to view this user')
   }
 
   return user
 }
 ```
 
-### Mutation Pattern
+### DAL Mutation Pattern
 
 ```typescript
-// entities/user/api/mutations.ts
+// entities/post/api/mutations.ts
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/layers/shared/api/auth'
-import type { CreateUserInput } from '../model/types'
+import type { CreatePostInput, UpdatePostInput } from '../model/types'
 
-export async function createUser(data: CreateUserInput) {
-  const currentUser = await requireAuth()
+export async function createPost(data: CreatePostInput) {
+  const user = await requireAuth()  // Throws if not authenticated
 
-  if (!currentUser.isAdmin) {
-    throw new Error('Only admins can create users')
+  return prisma.post.create({
+    data: {
+      ...data,
+      authorId: user.id  // Always set from authenticated user
+    }
+  })
+}
+
+export async function updatePost(id: string, data: UpdatePostInput) {
+  const user = await requireAuth()
+
+  const post = await prisma.post.findUnique({ where: { id } })
+  if (!post) throw new Error('Post not found')
+
+  // Check ownership before allowing update
+  if (post.authorId !== user.id) {
+    throw new Error('Cannot update post you do not own')
   }
 
-  return prisma.user.create({ data })
+  return prisma.post.update({ where: { id }, data })
 }
 ```
 
-### DAL Rules
+### Query with Relations
 
-| Rule | Reason |
-|------|--------|
-| Never import `prisma` outside DAL | Centralizes data access |
-| Auth checks in every function | Defense in depth |
-| Throw errors, don't return null for auth | Distinguishes "not found" from "forbidden" |
-| Export via entity index.ts | Clean public API |
+```typescript
+// entities/post/api/queries.ts
+export async function getPostWithAuthor(id: string) {
+  const user = await getCurrentUser()
 
-## Common Commands
-
-```bash
-# Generate client after schema changes
-pnpm prisma:generate
-
-# Open Prisma Studio (database GUI)
-pnpm prisma:studio
-
-# Validate schema
-pnpm prisma validate
-
-# Create a migration (production)
-pnpm prisma migrate dev --name my_migration
-
-# Apply migrations (production)
-pnpm prisma migrate deploy
-```
-
-## Adding Models
-
-1. Add model to `prisma/schema.prisma` with proper mappings
-2. Run `pnpm prisma migrate dev --name descriptive_name` to create migration
-3. Run `pnpm prisma:generate` to update client
-4. Create DAL functions in `entities/[name]/api/`
-
-Example model with all conventions:
-
-```prisma
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?  @db.Text
-  published Boolean  @default(false)
-  authorId  String   @map("author_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@index([authorId])
-  @@map("posts")
+  return prisma.post.findUnique({
+    where: { id },
+    include: {
+      // Only select needed fields from relations
+      author: { select: { id: true, name: true, image: true } },
+      comments: {
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: { author: { select: { name: true, image: true } } }
+      }
+    }
+  })
 }
 ```
 
-## Query Patterns
-
-### Selecting Specific Fields
+### Transaction Pattern
 
 ```typescript
-// Good - only fetch needed fields
-const user = await prisma.user.findUnique({
-  where: { id },
-  select: { id: true, email: true, name: true }
-})
-
-// Avoid - fetches all fields
-const user = await prisma.user.findUnique({ where: { id } })
-```
-
-### Including Relations
-
-```typescript
-const post = await prisma.post.findUnique({
-  where: { id },
-  include: {
-    author: { select: { id: true, name: true } },
-    comments: { take: 10, orderBy: { createdAt: 'desc' } }
-  }
-})
-```
-
-### Pagination
-
-```typescript
-// Cursor-based (preferred for large datasets)
-const posts = await prisma.post.findMany({
-  take: 20,
-  skip: 1,
-  cursor: { id: lastPostId },
-  orderBy: { createdAt: 'desc' }
-})
-
-// Offset-based (simpler, for smaller datasets)
-const posts = await prisma.post.findMany({
-  take: 20,
-  skip: page * 20,
-  orderBy: { createdAt: 'desc' }
-})
-```
-
-### Transactions
-
-```typescript
+// entities/order/api/mutations.ts
 export async function createOrderWithItems(data: CreateOrderInput) {
   const user = await requireAuth()
 
+  // Use transaction to ensure atomicity
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.create({
       data: { userId: user.id, status: 'pending' }
@@ -342,7 +226,8 @@ export async function createOrderWithItems(data: CreateOrderInput) {
     await tx.orderItem.createMany({
       data: data.items.map(item => ({
         orderId: order.id,
-        ...item
+        productId: item.productId,
+        quantity: item.quantity
       }))
     })
 
@@ -351,24 +236,264 @@ export async function createOrderWithItems(data: CreateOrderInput) {
 }
 ```
 
+### Pagination Pattern
+
+```typescript
+// Cursor-based (preferred for large datasets)
+export async function listPosts(cursor?: string) {
+  return prisma.post.findMany({
+    take: 20,
+    skip: cursor ? 1 : 0,  // Skip the cursor itself
+    cursor: cursor ? { id: cursor } : undefined,
+    orderBy: { createdAt: 'desc' }
+  })
+}
+
+// Offset-based (simpler, for smaller datasets)
+export async function listPostsByPage(page: number = 1) {
+  const pageSize = 20
+  return prisma.post.findMany({
+    take: pageSize,
+    skip: (page - 1) * pageSize,
+    orderBy: { createdAt: 'desc' }
+  })
+}
+```
+
+## Anti-Patterns
+
+```typescript
+// ❌ NEVER import prisma directly in Server Components
+import { prisma } from '@/lib/prisma'
+
+export default async function Page() {
+  const users = await prisma.user.findMany()  // Bypasses auth, breaks DAL
+  return <UserList users={users} />
+}
+
+// ✅ Always use DAL functions
+import { listUsers } from '@/layers/entities/user'
+
+export default async function Page() {
+  const users = await listUsers()  // Auth checked, consistent patterns
+  return <UserList users={users} />
+}
+```
+
+```typescript
+// ❌ Don't forget @map for multi-word fields
+model BlogPost {
+  publishedAt DateTime
+  @@map("blog_posts")
+}
+// Creates column "publishedAt" (camelCase) - breaks PostgreSQL conventions
+
+// ✅ Use @map for snake_case database columns
+model BlogPost {
+  publishedAt DateTime @map("published_at")
+  @@map("blog_posts")
+}
+// Creates column "published_at" (snake_case) - follows conventions
+```
+
+```typescript
+// ❌ Don't fetch all fields when only some needed
+const user = await prisma.user.findUnique({
+  where: { id }
+})
+// Fetches ALL fields including passwordHash, internal metadata
+
+// ✅ Use select to fetch only needed fields
+const user = await prisma.user.findUnique({
+  where: { id },
+  select: { id: true, email: true, name: true, image: true }
+})
+// Only fetches public fields, improves performance
+```
+
+```typescript
+// ❌ N+1 query pattern - fetches posts then loops to get authors
+const posts = await prisma.post.findMany()
+for (const post of posts) {
+  post.author = await prisma.user.findUnique({ where: { id: post.authorId } })
+}
+// Makes 1 + N database queries
+
+// ✅ Use include to fetch relations in one query
+const posts = await prisma.post.findMany({
+  include: { author: { select: { id: true, name: true } } }
+})
+// Makes 1 database query with JOIN
+```
+
+```typescript
+// ❌ Don't skip auth checks in DAL functions
+export async function deletePost(id: string) {
+  return prisma.post.delete({ where: { id } })  // Anyone can delete any post!
+}
+
+// ✅ Always check authorization before mutations
+export async function deletePost(id: string) {
+  const user = await requireAuth()
+  const post = await prisma.post.findUnique({ where: { id } })
+
+  if (!post) throw new Error('Post not found')
+  if (post.authorId !== user.id && !user.isAdmin) {
+    throw new Error('Cannot delete post you do not own')
+  }
+
+  return prisma.post.delete({ where: { id } })
+}
+```
+
+## Adding Models
+
+1. **Add model to schema** with proper mappings:
+
+   ```prisma
+   // prisma/schema.prisma
+   model Post {
+     id        String   @id @default(cuid())
+     title     String
+     content   String?
+     published Boolean  @default(false)
+     authorId  String   @map("author_id")
+     createdAt DateTime @default(now()) @map("created_at")
+     updatedAt DateTime @updatedAt @map("updated_at")
+
+     author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+     @@index([authorId])
+     @@map("posts")
+   }
+   ```
+
+2. **Create migration**:
+   ```bash
+   pnpm prisma migrate dev --name add_post_model
+   ```
+
+3. **Generate client**:
+   ```bash
+   pnpm prisma:generate
+   ```
+
+4. **Create DAL structure**:
+   ```
+   src/layers/entities/post/
+   ├── api/
+   │   ├── queries.ts      # Read operations
+   │   ├── mutations.ts    # Write operations
+   │   └── index.ts        # Re-exports
+   ├── model/
+   │   └── types.ts        # Zod schemas, TypeScript types
+   └── index.ts            # Public API
+   ```
+
+5. **Implement DAL functions** following patterns above
+
+6. **Verify**: Run `pnpm typecheck` to ensure types are correct
+
+## Troubleshooting
+
+### "Cannot find module '@/generated/prisma'"
+
+**Cause**: Prisma client hasn't been generated after schema changes.
+
+**Fix**: Run `pnpm prisma:generate`
+
+### "The datasource property is required"
+
+**Cause**: One of:
+1. `prisma.config.ts` is in wrong location (must be project root)
+2. `dotenv/config` isn't imported at top of config file
+3. `.env` file doesn't exist or `DATABASE_URL` isn't set
+
+**Fix**: Check each cause in order. Most common is missing `.env` file.
+
+### Connection refused to localhost:5432 (PostgreSQL only)
+
+**Cause**: PostgreSQL Docker container isn't running.
+
+**Fix**: Start the container:
+```bash
+docker ps | grep postgres
+# If not running:
+docker start postgres
+```
+
+### SQLite database locked
+
+**Cause**: SQLite only supports one writer at a time.
+
+**Fix**:
+- Close Prisma Studio if open
+- Ensure no other process is writing to the database
+- Restart your dev server
+
+### Schema drift detected
+
+**Cause**: Database state doesn't match schema.
+
+**Fix**:
+```bash
+pnpm prisma db pull   # Pull current DB state
+pnpm prisma migrate dev  # Create migration for differences
+```
+
+### Type mismatches after schema changes
+
+**Cause**: Generated types are stale.
+
+**Fix**:
+```bash
+pnpm prisma:generate
+```
+
+## Migrating to PostgreSQL
+
+When deploying to production:
+
+1. **Update schema** datasource:
+   ```prisma
+   datasource db {
+     provider = "postgresql"
+     url      = env("DATABASE_URL")
+   }
+   ```
+
+2. **Update .env** with PostgreSQL URL:
+   ```bash
+   DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
+   ```
+
+3. **Regenerate and migrate**:
+   ```bash
+   pnpm prisma:generate
+   pnpm prisma migrate deploy
+   ```
+
+**SQLite limitations to note:**
+- Enums stored as TEXT (no database-level validation)
+- No `@db.Text` or PostgreSQL-specific column types
+- Single-writer concurrency (fine for local dev)
+
 ## Local Development
 
-SQLite requires no setup - the database file is created automatically at `.data/dev.db`.
+### SQLite (default)
 
 ```bash
-# Create/update database schema
-pnpm prisma db push
+# Database file is created automatically at .data/dev.db
+pnpm prisma db push       # Create/update schema
+pnpm prisma:studio        # View data in GUI
 
 # Reset database (delete and recreate)
 rm .data/dev.db && pnpm prisma db push
-
-# View database in Prisma Studio
-pnpm prisma:studio
 ```
 
-### Using Docker PostgreSQL (Optional)
+### Docker PostgreSQL (optional)
 
-If you need PostgreSQL locally (to match production):
+If you need PostgreSQL locally to match production:
 
 ```bash
 # Create and start Postgres
@@ -395,166 +520,31 @@ docker exec -it postgres psql -U postgres -d myapp
 docker rm -f postgres && docker volume rm postgres_data
 ```
 
-## Troubleshooting
+## Common Commands
 
-### "Cannot find module '@/generated/prisma'"
-
-Run the generator:
 ```bash
+# Generate client after schema changes
 pnpm prisma:generate
+
+# Open Prisma Studio (database GUI)
+pnpm prisma:studio
+
+# Validate schema
+pnpm prisma validate
+
+# Create a migration (development)
+pnpm prisma migrate dev --name descriptive_name
+
+# Apply migrations (production)
+pnpm prisma migrate deploy
+
+# Reset database (development only - deletes all data!)
+pnpm prisma migrate reset
 ```
 
-### "The datasource property is required"
+## References
 
-This error occurs when:
-1. `prisma.config.ts` is in the wrong location (must be in project root)
-2. `dotenv/config` isn't imported at the top of the config file
-3. The `.env` file doesn't exist or `DATABASE_URL` isn't set
-
-### Connection refused to localhost:5432 (PostgreSQL only)
-
-If using Docker PostgreSQL, make sure it's running:
-```bash
-docker ps | grep postgres
-# If not running:
-docker start postgres
-```
-
-### SQLite database locked
-
-SQLite only supports one writer at a time. If you see "database is locked":
-- Close Prisma Studio if open
-- Ensure no other process is writing to the database
-- Restart your dev server
-
-### Schema drift
-
-```bash
-pnpm prisma db pull   # Pull current DB state
-pnpm prisma migrate dev  # Create migration for differences
-```
-
-### Type mismatches after schema changes
-
-Regenerate types:
-```bash
-pnpm prisma:generate
-```
-
-## BetterAuth Models
-
-The project uses BetterAuth for authentication, which requires these models:
-
-| Model | Purpose |
-|-------|---------|
-| `User` | User accounts with email, name, image |
-| `Session` | Active login sessions (7-day expiry) |
-| `Account` | OAuth provider connections (future) |
-| `Verification` | OTP codes and verification tokens |
-
-### Schema Definition
-
-```prisma
-model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @map("email_verified")
-  image         String?
-  createdAt     DateTime  @map("created_at")
-  updatedAt     DateTime  @map("updated_at")
-
-  sessions      Session[]
-  accounts      Account[]
-
-  @@unique([email])
-  @@map("users")
-}
-
-model Session {
-  id        String   @id
-  expiresAt DateTime @map("expires_at")
-  token     String
-  createdAt DateTime @map("created_at")
-  updatedAt DateTime @map("updated_at")
-  ipAddress String?  @map("ip_address")
-  userAgent String?  @map("user_agent")
-  userId    String   @map("user_id")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([token])
-  @@map("sessions")
-}
-
-model Account {
-  id                    String    @id
-  accountId             String    @map("account_id")
-  providerId            String    @map("provider_id")
-  userId                String    @map("user_id")
-  accessToken           String?   @map("access_token")
-  refreshToken          String?   @map("refresh_token")
-  idToken               String?   @map("id_token")
-  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
-  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @map("created_at")
-  updatedAt             DateTime  @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("accounts")
-}
-
-model Verification {
-  id         String    @id
-  identifier String
-  value      String
-  expiresAt  DateTime  @map("expires_at")
-  createdAt  DateTime? @map("created_at")
-  updatedAt  DateTime? @map("updated_at")
-
-  @@map("verifications")
-}
-```
-
-### Working with Auth Models
-
-Auth models are managed by BetterAuth - don't modify them directly via Prisma except for:
-- Reading user data in DAL functions
-- Admin operations (viewing sessions, clearing verifications)
-
-```typescript
-// Reading user in DAL (correct)
-import { getCurrentUser } from '@/layers/shared/api/auth'
-
-export async function getUserProfile() {
-  const user = await getCurrentUser()
-  if (!user) return null
-
-  return prisma.user.findUnique({
-    where: { id: user.id },
-    select: { id: true, email: true, name: true, image: true }
-  })
-}
-
-// Creating users (wrong - use BetterAuth sign-up flow)
-await prisma.user.create({ data: { ... } })  // Don't do this
-```
-
-See `developer-guides/09-authentication.md` for complete authentication patterns.
-
-## File Locations
-
-| What | Where |
-|------|-------|
-| Schema | `prisma/schema.prisma` |
-| Config | `prisma.config.ts` (project root) |
-| SQLite database | `.data/dev.db` (gitignored) |
-| Migrations | `prisma/migrations/` |
-| Generated client | `src/generated/prisma/` |
-| Prisma singleton | `src/lib/prisma.ts` |
-| DAL functions | `src/layers/entities/*/api/` |
-| Auth utilities | `src/layers/shared/api/auth.ts` |
-| Auth configuration | `src/lib/auth.ts` |
+- [Prisma 7 Documentation](https://www.prisma.io/docs)
+- [Data Access Layer Pattern](./01-project-structure.md#data-access-layer-dal)
+- [Authentication Guide](./09-authentication.md) - Auth utilities used in DAL
+- [Environment Variables](./02-environment-variables.md) - Setting up DATABASE_URL

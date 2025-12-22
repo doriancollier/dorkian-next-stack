@@ -25,7 +25,7 @@ Add new processes, update existing ones, or improve the Claude Code workflow bas
 | **Skills** | `/.claude/skills/[skill-name]/SKILL.md` | Reusable expertise Claude applies automatically (model-invoked) |
 | **Rules** | `/.claude/rules/[topic].md` | Path-specific guidelines that apply to certain file types (path-triggered) |
 | **Hooks** | `/.claude/settings.json` | Automated validation/actions (via ClaudeKit, event-triggered) |
-| **Developer Guides** | `/developer-guides/[name].md` | Detailed patterns and conventions |
+| **Developer Guides** | `/developer-guides/[name].md` | Detailed patterns and conventions (see `writing-developer-guides` skill) |
 | **Memory** | `/CLAUDE.md` | Core instructions, high-level documentation |
 | **Harness README** | `/.claude/README.md` | Harness structure, component inventory, maintenance guides |
 
@@ -360,6 +360,18 @@ These rules apply to [description of what files/patterns].
 - User needs explicit control → **Command**
 - Task needs isolation/execution → **Agent**
 - Reusable expertise, auto-activated → **Skill**
+
+**Developer Guide Template:**
+
+For developer guides in `/developer-guides/`, apply the `writing-developer-guides` skill which provides:
+- Optimal structure for AI agent consumption
+- Required sections (Overview, Key Files, Decision Matrix, Core Patterns, Anti-Patterns, Troubleshooting)
+- Complete template in `.claude/skills/writing-developer-guides/reference.md`
+
+After creating/updating a guide, update `developer-guides/INDEX.md` with:
+- Entry in Guide Coverage Map table
+- Pattern matching rules (file patterns + keywords)
+- Maintenance tracking date
 
 - [ ] **4.3** After creating/modifying process files, update `.claude/README.md`:
   - Add new commands to the Commands table

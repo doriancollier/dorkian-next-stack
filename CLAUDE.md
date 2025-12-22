@@ -855,6 +855,7 @@ See `developer-guides/09-authentication.md` for complete documentation.
 | `debugging-systematically` | Investigating bugs — methodology, patterns, troubleshooting |
 | `working-with-prisma` | Database work — schema design, DAL patterns, queries |
 | `managing-roadmap-moscow` | Roadmap work — MoSCoW prioritization, roadmap utilities |
+| `writing-developer-guides` | Creating/updating developer-guides/ — optimal structure for AI agents |
 
 ### Path-Specific Rules
 
