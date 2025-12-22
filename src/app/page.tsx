@@ -7,7 +7,16 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, FileCode, Book, Layers, Database, Palette } from 'lucide-react'
+import {
+  ArrowRight,
+  FileCode,
+  Book,
+  Layers,
+  Database,
+  Palette,
+  Terminal,
+  BookOpen,
+} from 'lucide-react'
 
 const techStack = [
   { name: 'Next.js 16', description: 'React framework with App Router' },
@@ -26,6 +35,18 @@ const quickLinks = [
     description: 'See forms, components, and patterns in action',
     href: '/example',
     icon: FileCode,
+  },
+  {
+    title: 'Design System',
+    description: '53 components with Calm Tech design language',
+    href: '/system/ui',
+    icon: Palette,
+  },
+  {
+    title: 'Claude Code Harness',
+    description: '41 commands, agents, skills, and automation',
+    href: '/system/claude-code',
+    icon: Terminal,
   },
   {
     title: 'Developer Guides',
@@ -48,13 +69,6 @@ const quickLinks = [
     icon: Database,
     external: true,
   },
-  {
-    title: 'Design System',
-    description: 'Calm Tech design language',
-    href: '/docs/DESIGN_SYSTEM.md',
-    icon: Palette,
-    external: true,
-  },
 ]
 
 export default function HomePage() {
@@ -66,7 +80,8 @@ export default function HomePage() {
           Welcome to Next.js Boilerplate
         </h1>
         <p className="text-muted-foreground text-lg">
-          A production-ready starter with modern tooling, type safety, and best practices.
+          A production-ready starter with modern tooling, type safety, and best
+          practices.
         </p>
       </div>
 
@@ -74,9 +89,7 @@ export default function HomePage() {
       <Card>
         <CardHeader>
           <CardTitle>Quick Start</CardTitle>
-          <CardDescription>
-            Get up and running in minutes
-          </CardDescription>
+          <CardDescription>Get up and running in minutes</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 text-sm">
@@ -87,7 +100,11 @@ export default function HomePage() {
               <div>
                 <p className="font-medium">Configure your database</p>
                 <p className="text-muted-foreground">
-                  Update <code className="text-xs bg-muted px-1 py-0.5 rounded">.env</code> with your Neon PostgreSQL connection string
+                  Update{' '}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                    .env
+                  </code>{' '}
+                  with your database connection string
                 </p>
               </div>
             </div>
@@ -98,7 +115,11 @@ export default function HomePage() {
               <div>
                 <p className="font-medium">Push the schema</p>
                 <p className="text-muted-foreground">
-                  Run <code className="text-xs bg-muted px-1 py-0.5 rounded">pnpm prisma:push</code> to create your database tables
+                  Run{' '}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                    pnpm prisma:push
+                  </code>{' '}
+                  to create your database tables
                 </p>
               </div>
             </div>
@@ -109,17 +130,46 @@ export default function HomePage() {
               <div>
                 <p className="font-medium">Start building</p>
                 <p className="text-muted-foreground">
-                  Create your first feature in <code className="text-xs bg-muted px-1 py-0.5 rounded">src/layers/features/</code>
+                  Create your first feature in{' '}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                    src/layers/features/
+                  </code>
                 </p>
               </div>
             </div>
           </div>
           <div className="pt-2">
             <Button render={<Link href="/example" />} nativeButton={false}>
-                View Example
-                <ArrowRight className="ml-2 h-4 w-4" />
+              View Example
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Template Documentation Callout */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <BookOpen className="size-5 text-primary" />
+            <CardTitle className="text-base">Template Documentation</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-4">
+          <CardDescription>
+            Explore the design system, Claude Code harness, and developer guides
+            that power this template.
+          </CardDescription>
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href="/system" />}
+            nativeButton={false}
+            className="shrink-0"
+          >
+            View System
+            <ArrowRight className="ml-2 size-3" />
+          </Button>
         </CardContent>
       </Card>
 
@@ -133,7 +183,9 @@ export default function HomePage() {
               className="rounded-lg border bg-card p-4 text-card-foreground"
             >
               <p className="font-medium">{tech.name}</p>
-              <p className="text-sm text-muted-foreground">{tech.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {tech.description}
+              </p>
             </div>
           ))}
         </div>
@@ -143,9 +195,9 @@ export default function HomePage() {
       <div className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Resources</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {quickLinks.map((link) => (
-            <Card key={link.title} className="card-interactive">
-              {link.external ? (
+          {quickLinks.map((link) =>
+            link.external ? (
+              <Card key={link.title} className="card-interactive">
                 <a
                   href={link.href}
                   target="_blank"
@@ -162,7 +214,9 @@ export default function HomePage() {
                     <CardDescription>{link.description}</CardDescription>
                   </CardContent>
                 </a>
-              ) : (
+              </Card>
+            ) : (
+              <Card key={link.title} className="card-interactive">
                 <Link href={link.href} className="block">
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
@@ -174,9 +228,9 @@ export default function HomePage() {
                     <CardDescription>{link.description}</CardDescription>
                   </CardContent>
                 </Link>
-              )}
-            </Card>
-          ))}
+              </Card>
+            )
+          )}
         </div>
       </div>
     </div>
