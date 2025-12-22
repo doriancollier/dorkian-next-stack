@@ -97,16 +97,20 @@ This project uses **Base UI** (via basecn) instead of Radix UI. Key differences:
 </Button>
 
 // CORRECT (Base UI pattern)
-<Button render={<Link href="/contact" />}>
+// IMPORTANT: When render replaces button with non-button element (Link, div),
+// add nativeButton={false} to suppress console warnings
+<Button render={<Link href="/contact" />} nativeButton={false}>
   Contact
 </Button>
 
-// With SidebarMenuButton
+// With SidebarMenuButton (uses useRender, not Button primitive - no nativeButton needed)
 <SidebarMenuButton render={<Link href={item.href} />}>
   <Icon className="size-4" />
   <span>{item.label}</span>
 </SidebarMenuButton>
 ```
+
+**Why `nativeButton={false}`?** Base UI's Button assumes it renders a native `<button>` element. When using `render` to replace it with a Link (which renders as `<a>`), you must set `nativeButton={false}` to tell Base UI the element isn't a button. Otherwise you get: "A component that acts as a button was not rendered as a native `<button>`"
 
 ### Type Workarounds
 
@@ -129,12 +133,66 @@ type Props = ButtonProps & {
 }
 ```
 
+### Positioner Pattern (Critical)
+
+Base UI requires `Popup`, `Arrow`, and `ScrollArrow` to be inside a `Positioner`. The `*Content` components must be self-contained:
+
+```tsx
+// WRONG (basecn default - exposes Positioner separately)
+// This breaks if users don't manually wrap Content in Positioner
+<Select>
+  <SelectTrigger />
+  <SelectContent />  {/* Error: PositionerContext missing */}
+</Select>
+
+// CORRECT (self-contained Content)
+function SelectContent({ children, ...props }) {
+  return (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Positioner sideOffset={5} className="z-50">
+        <SelectPrimitive.Popup {...props}>
+          {children}
+        </SelectPrimitive.Popup>
+      </SelectPrimitive.Positioner>
+    </SelectPrimitive.Portal>
+  );
+}
+```
+
+**When installing new basecn components**, check if `*Content` wraps `Portal > Positioner > Popup`. If not, update it to be self-contained. Components affected:
+- Select, Popover, Tooltip, HoverCard, DropdownMenu, ContextMenu, Dialog, Sheet, AlertDialog
+
+### GroupLabel Pattern (Critical)
+
+Base UI requires `GroupLabel` to be inside a `Group`. The `*Label` components must self-contain their Group wrapper:
+
+```tsx
+// WRONG (basecn default - exposes GroupLabel without Group)
+// This breaks if users don't manually wrap Label in Group
+<DropdownMenuContent>
+  <DropdownMenuLabel>My Account</DropdownMenuLabel>  {/* Error: MenuGroupRootContext missing */}
+  <DropdownMenuItem>Profile</DropdownMenuItem>
+</DropdownMenuContent>
+
+// CORRECT (self-contained Label with Group wrapper)
+function DropdownMenuLabel({ className, inset, ...props }) {
+  return (
+    <MenuPrimitive.Group>
+      <MenuPrimitive.GroupLabel {...props} />
+    </MenuPrimitive.Group>
+  );
+}
+```
+
+**When installing new basecn components**, check if `*Label` or `*GroupLabel` wraps in a `Group`. Components affected:
+- DropdownMenuLabel, ContextMenuGroupLabel
+
 ### Component Mapping
 
 | Radix | Base UI |
 |-------|---------|
 | HoverCard | PreviewCard |
-| `side` prop on Content | `TooltipPositioner` wrapper |
+| `side` prop on Content | `sideOffset` on Positioner |
 | `asChild` | `render` prop |
 | Multiple @radix-ui/* packages | Single @base-ui/react |
 

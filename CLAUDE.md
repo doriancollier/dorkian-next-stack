@@ -246,7 +246,8 @@ This project uses **Base UI** (via [basecn](https://basecn.dev)) instead of Radi
 </Button>
 
 // NEW (Base UI): render prop pattern
-<Button render={<Link href="/contact" />}>
+// Use nativeButton={false} when replacing button with non-button element
+<Button render={<Link href="/contact" />} nativeButton={false}>
   Contact
 </Button>
 ```

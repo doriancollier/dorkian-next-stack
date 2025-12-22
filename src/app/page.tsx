@@ -115,7 +115,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="pt-2">
-            <Button render={<Link href="/example" />}>
+            <Button render={<Link href="/example" />} nativeButton={false}>
                 View Example
                 <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
