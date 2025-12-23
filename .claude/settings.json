@@ -8,7 +8,13 @@
       "Bash(npm:*)",
       "Bash(pnpm:*)",
       "Bash(npx:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(sips:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)"
     ],
     "deny": [
       ".env",

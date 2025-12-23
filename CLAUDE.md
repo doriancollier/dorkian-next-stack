@@ -808,6 +808,75 @@ function MyComponent() {
 
 See `developer-guides/09-authentication.md` for complete documentation.
 
+## Image Generation (Replicate MCP)
+
+Generate, edit, and process images using the Replicate MCP server. This provides AI-powered image generation, background removal, and upscaling capabilities.
+
+### Quick Reference
+
+| Task | Model | Command |
+|------|-------|---------|
+| Generate image | `google/nano-banana` | `mcp__replicate__create_models_predictions` |
+| Remove background | `cjwbw/rembg` | `mcp__replicate__create_models_predictions` |
+| Upscale image | `nightmareai/real-esrgan` | `mcp__replicate__create_models_predictions` |
+| Download result | — | `curl -sL "<url>" -o ".temp/images/<name>.png"` |
+| Display to user | — | `open -a "Google Chrome" <file>` |
+
+### Workflow
+
+```
+1. Generate/Process → 2. Download to .temp/images/ → 3. Display to user → 4. Process with sips (optional) → 5. Move to public/images/
+```
+
+### Model Selection
+
+| Model | Use Case | Speed | Cost |
+|-------|----------|-------|------|
+| `google/nano-banana` | General generation (default) | ~6s | ~$0.01 |
+| `black-forest-labs/flux-schnell` | Fast prototyping | ~2s | ~$0.003 |
+| `cjwbw/rembg` | Background removal | ~2s | ~$0.004 |
+| `nightmareai/real-esrgan` | Upscaling (2-10x) | ~1.8s | ~$0.005 |
+
+### Example: Generate Image
+
+```typescript
+mcp__replicate__create_models_predictions({
+  model_owner: "google",
+  model_name: "nano-banana",
+  input: {
+    prompt: "A cozy coffee shop, warm lighting, minimal style",
+    aspect_ratio: "16:9",
+    output_format: "png"
+  },
+  Prefer: "wait",
+  jq_filter: "{id, status, output, error}"
+})
+```
+
+### MCP Tips
+
+- **Always use `jq_filter`** — Reduces response size and prevents timeouts
+- **Use `Prefer: "wait"`** — Waits for completion (up to 60s)
+- **SSE can be intermittent** — Retry on timeout, check https://status.replicate.com
+- **Direct model lookup** — Use `get_models` instead of `search` when you know the model name
+
+### File Organization
+
+```
+.temp/images/          # Temporary (gitignored) - download here first
+public/images/         # Production - move approved images here
+src/assets/images/     # App-bundled images
+```
+
+### Local Processing (sips)
+
+```bash
+sips -Z 800 image.png                    # Resize to max 800px
+sips -s format jpeg -s formatOptions 80 in.png --out out.jpg  # Convert to JPEG
+```
+
+See `.claude/skills/generating-images-replicate/SKILL.md` for complete documentation.
+
 ## Claude Code Customization
 
 ### Agents (use proactively for specialized tasks)
@@ -854,6 +923,7 @@ See `developer-guides/09-authentication.md` for complete documentation.
 | `organizing-fsd-architecture` | Feature structure, layer organization |
 | `debugging-systematically` | Investigating bugs — methodology, patterns, troubleshooting |
 | `working-with-prisma` | Database work — schema design, DAL patterns, queries |
+| `generating-images-replicate` | Image work — generation, background removal, upscaling, processing, web integration |
 | `managing-roadmap-moscow` | Roadmap work — MoSCoW prioritization, roadmap utilities |
 | `writing-developer-guides` | Creating/updating developer-guides/ — optimal structure for AI agents |
 

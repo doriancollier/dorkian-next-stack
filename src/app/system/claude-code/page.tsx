@@ -23,10 +23,10 @@ import {
 const harnessStats = [
   { label: 'Commands', value: '43', icon: Terminal },
   { label: 'Agents', value: '7', icon: Bot },
-  { label: 'Skills', value: '8', icon: Sparkles },
+  { label: 'Skills', value: '9', icon: Sparkles },
   { label: 'Rules', value: '5', icon: Shield },
   { label: 'Hooks', value: '9', icon: Zap },
-  { label: 'MCP Servers', value: '4', icon: Settings },
+  { label: 'MCP Servers', value: '5', icon: Settings },
 ]
 
 const commandNamespaces = [
@@ -150,6 +150,11 @@ const skills = [
     name: 'working-with-prisma',
     description: 'Prisma 7 patterns, DAL conventions',
     trigger: 'Database queries, migrations',
+  },
+  {
+    name: 'generating-images-replicate',
+    description: 'Replicate MCP for image generation, processing',
+    trigger: 'Image generation, editing',
   },
   {
     name: 'managing-roadmap-moscow',

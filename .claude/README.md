@@ -21,10 +21,10 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 |-----------|-------|----------|
 | Commands | 43 | `.claude/commands/` |
 | Agents | 7 | `.claude/agents/` |
-| Skills | 8 | `.claude/skills/` |
+| Skills | 9 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
 | Hooks | 9 | `.claude/settings.json` |
-| MCP Servers | 4 | `.claude/settings.local.json` |
+| MCP Servers | 5 | `.mcp.json` |
 | Developer Guides | 9 + INDEX | `developer-guides/` |
 
 ## Component Types
@@ -89,6 +89,7 @@ Skills provide reusable expertise that Claude applies automatically when relevan
 | `styling-with-tailwind-shadcn` | Tailwind CSS v4, Shadcn UI implementation | Writing styles, building components, theming |
 | `organizing-fsd-architecture` | Feature-Sliced Design, layer organization | Structuring features, file placement, imports |
 | `working-with-prisma` | Prisma 7 patterns, DAL conventions | Schema design, database queries, migrations |
+| `generating-images-replicate` | Replicate MCP for image generation, processing | Image generation, background removal, upscaling |
 | `managing-roadmap-moscow` | MoSCoW prioritization, roadmap utilities | Product planning, prioritization decisions |
 | `writing-developer-guides` | Developer guide structure for AI agents | Creating/updating files in developer-guides/ |
 
@@ -125,6 +126,7 @@ External tools available via Model Context Protocol.
 | `context7` | Library documentation lookup |
 | `shadcn` | Component registry and examples |
 | `mcp-dev-db` | Direct database inspection (dev only) |
+| `replicate` | AI image generation, background removal, upscaling |
 
 ### Developer Guides
 
@@ -237,13 +239,14 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── product-manager.md
 │   └── research-expert.md
 │
-├── skills/                # Reusable expertise (7 total)
+├── skills/                # Reusable expertise (9 total)
 │   ├── proactive-clarification/
 │   ├── debugging-systematically/
 │   ├── designing-frontend/
 │   ├── styling-with-tailwind-shadcn/
 │   ├── organizing-fsd-architecture/
 │   ├── working-with-prisma/
+│   ├── generating-images-replicate/
 │   ├── managing-roadmap-moscow/
 │   └── writing-developer-guides/
 │

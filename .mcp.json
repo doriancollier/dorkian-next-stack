@@ -24,6 +24,10 @@
     "shadcn": {
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
+    },
+    "replicate": {
+      "type": "sse",
+      "url": "https://mcp.replicate.com/sse"
     }
   }
 }
