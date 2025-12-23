@@ -9,7 +9,6 @@ import {
 import { Button } from '@/components/ui/button'
 import {
   ArrowRight,
-  FileCode,
   Book,
   Layers,
   Database,
@@ -30,12 +29,6 @@ const techStack = [
 ]
 
 const quickLinks = [
-  {
-    title: 'Example Page',
-    description: 'See forms, components, and patterns in action',
-    href: '/example',
-    icon: FileCode,
-  },
   {
     title: 'Design System',
     description: '53 components with Calm Tech design language',
@@ -139,8 +132,8 @@ export default function HomePage() {
             </div>
           </div>
           <div className="pt-2">
-            <Button render={<Link href="/example" />} nativeButton={false}>
-              View Example
+            <Button render={<Link href="/system/ui" />} nativeButton={false}>
+              Explore Components
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

@@ -18,6 +18,14 @@ import {
   FileCode,
   Zap,
   KeyRound,
+  FileWarning,
+  AlertTriangle,
+  Scale,
+  Shield,
+  LogIn,
+  ShieldCheck,
+  LayoutDashboard,
+  Cookie,
 } from 'lucide-react'
 
 const systemSections = [
@@ -83,6 +91,71 @@ const techStack = [
   { name: 'TanStack Query', description: 'Server state management' },
   { name: 'Zod 4', description: 'Schema validation' },
 ]
+
+const standardPages = {
+  auth: [
+    {
+      title: 'Sign In',
+      description: 'Email OTP authentication',
+      href: '/sign-in',
+      file: 'app/(auth)/sign-in/page.tsx',
+      icon: LogIn,
+    },
+    {
+      title: 'OTP Verify',
+      description: 'One-time password verification',
+      href: '/verify',
+      file: 'app/(auth)/verify/page.tsx',
+      icon: ShieldCheck,
+    },
+    {
+      title: 'Dashboard',
+      description: 'Protected authenticated home',
+      href: '/dashboard',
+      file: 'app/(authenticated)/dashboard/page.tsx',
+      icon: LayoutDashboard,
+    },
+  ],
+  error: [
+    {
+      title: '404 Not Found',
+      description: 'Custom page for missing routes',
+      href: '/this-page-does-not-exist',
+      file: 'app/not-found.tsx',
+      icon: FileWarning,
+    },
+    {
+      title: 'Error Pages',
+      description: 'Runtime error handling with retry',
+      href: null,
+      file: 'app/error.tsx, app/global-error.tsx',
+      icon: AlertTriangle,
+    },
+  ],
+  legal: [
+    {
+      title: 'Terms of Service',
+      description: 'Legal terms template',
+      href: '/terms',
+      file: 'app/(public)/terms/page.tsx',
+      icon: Scale,
+    },
+    {
+      title: 'Privacy Policy',
+      description: 'Privacy policy template',
+      href: '/privacy',
+      file: 'app/(public)/privacy/page.tsx',
+      icon: Shield,
+    },
+    {
+      title: 'Cookie Policy',
+      description: 'Cookie usage and consent',
+      href: '/cookies',
+      file: 'app/(public)/cookies/page.tsx',
+      icon: Cookie,
+    },
+  ],
+}
 
 export default function SystemPage() {
   return (
@@ -192,6 +265,66 @@ export default function SystemPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Standard Pages */}
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold tracking-tight">
+            Standard Pages
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Pre-built pages for authentication, error handling, and legal
+            compliance.
+          </p>
+        </div>
+
+        {/* Page categories */}
+        {[
+          { label: 'Authentication', pages: standardPages.auth },
+          { label: 'Error Handling', pages: standardPages.error },
+          { label: 'Legal', pages: standardPages.legal },
+        ].map((category) => (
+          <div key={category.label} className="space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {category.label}
+            </h3>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {category.pages.map((page) => {
+                const content = (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <page.icon className="size-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm">{page.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {page.description}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-2 font-mono text-xs text-muted-foreground truncate">
+                      {page.file}
+                    </p>
+                  </>
+                )
+
+                return page.href ? (
+                  <Link
+                    key={page.title}
+                    href={page.href}
+                    className="group rounded-lg border bg-card p-4 transition-colors hover:bg-accent"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={page.title} className="rounded-lg border bg-card p-4">
+                    {content}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Customization Note */}

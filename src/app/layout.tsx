@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { Providers } from './providers'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar, MobileHeader } from '@/layers/widgets/app-sidebar'
+import { CookieConsentBanner } from '@/layers/widgets/cookie-consent'
 import { cookies } from 'next/headers'
 import './globals.css'
 
@@ -42,6 +43,7 @@ export default async function RootLayout({
               <main className="flex-1">{children}</main>
             </SidebarInset>
           </SidebarProvider>
+          <CookieConsentBanner />
         </Providers>
       </body>
     </html>

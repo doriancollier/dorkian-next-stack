@@ -11,3 +11,6 @@ export * from '@/components/ui/input-otp'
 export * from '@/components/ui/label'
 export * from '@/components/ui/select'
 export * from '@/components/ui/checkbox'
+
+// Layout components
+export { PublicFooter } from './public-footer'
