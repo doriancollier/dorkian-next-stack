@@ -18,12 +18,15 @@ import {
   Map,
   Settings,
   Wrench,
+  Palette,
+  FileText,
+  Package,
 } from 'lucide-react'
 
 const harnessStats = [
   { label: 'Commands', value: '43', icon: Terminal },
   { label: 'Agents', value: '7', icon: Bot },
-  { label: 'Skills', value: '9', icon: Sparkles },
+  { label: 'Skills', value: '10', icon: Sparkles },
   { label: 'Rules', value: '5', icon: Shield },
   { label: 'Hooks', value: '9', icon: Zap },
   { label: 'MCP Servers', value: '5', icon: Settings },
@@ -157,6 +160,11 @@ const skills = [
     trigger: 'Image generation, editing',
   },
   {
+    name: 'vectorizing-images',
+    description: 'Raster-to-vector conversion with @neplex/vectorizer',
+    trigger: 'Converting PNG/JPG to SVG',
+  },
+  {
     name: 'managing-roadmap-moscow',
     description: 'MoSCoW prioritization, roadmap utilities',
     trigger: 'Product planning',
@@ -199,6 +207,45 @@ const coreWorkflows = [
       '/roadmap:open',
       '/roadmap:add <title>',
       '/roadmap:prioritize',
+    ],
+  },
+]
+
+const qualityOfLifeFeatures = [
+  {
+    title: 'IDE Color Customization',
+    icon: Palette,
+    description:
+      'Generate a unique VS Code color scheme from a single seed color to visually distinguish this project from others.',
+    commands: ['/cc:ide:set <color>', '/cc:ide:reset'],
+    details: [
+      'Supports hex (#3b82f6), RGB, HSL, or color names (forest green, ocean blue)',
+      'Uses 60-30-10 design rule with 11-step tonal palette',
+      'Only modifies .vscode/settings.json (project-level)',
+    ],
+  },
+  {
+    title: 'Dev Server Logging',
+    icon: FileText,
+    description:
+      'All dev server output is captured to timestamped log files, giving Claude access to server logs for debugging.',
+    commands: ['pnpm dev', '/debug:logs'],
+    details: [
+      'Logs stored in .logs/YYYY-MM-DD_HH-MM-SS.log',
+      'Claude can analyze logs to diagnose errors',
+      'Correlates errors with stack traces and code paths',
+    ],
+  },
+  {
+    title: 'pnpm Package Manager',
+    icon: Package,
+    description:
+      'The project uses pnpm by default for faster installs and better disk efficiency.',
+    commands: ['pnpm install', 'pnpm dev', 'pnpm build'],
+    details: [
+      'Lockfile: pnpm-lock.yaml',
+      'All scripts use pnpm (dev, build, test, lint)',
+      'Symlinked node_modules with content-addressable store',
     ],
   },
 ]
@@ -454,6 +501,56 @@ export default function ClaudeCodePage() {
         </div>
       </div>
 
+      {/* Quality of Life Features */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+          <Sparkles className="size-5" />
+          Quality of Life
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Developer experience enhancements that make working with Claude Code
+          more effective.
+        </p>
+        <div className="grid gap-4 md:grid-cols-3">
+          {qualityOfLifeFeatures.map((feature) => (
+            <Card key={feature.title}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <feature.icon className="size-4 text-primary" />
+                  <CardTitle className="text-base">{feature.title}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  {feature.description}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {feature.commands.map((cmd) => (
+                    <code
+                      key={cmd}
+                      className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono"
+                    >
+                      {cmd}
+                    </code>
+                  ))}
+                </div>
+                <ul className="space-y-1">
+                  {feature.details.map((detail) => (
+                    <li
+                      key={detail}
+                      className="text-xs text-muted-foreground flex items-start gap-1.5"
+                    >
+                      <span className="text-primary mt-0.5">•</span>
+                      {detail}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
       {/* File Locations */}
       <Card className="bg-muted/50">
         <CardHeader className="pb-2">
@@ -499,6 +596,18 @@ export default function ClaudeCodePage() {
                 CLAUDE.md
               </code>
               <span className="text-muted-foreground text-xs">Project instructions</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="text-xs bg-background px-2 py-1 rounded border font-mono">
+                .logs/
+              </code>
+              <span className="text-muted-foreground text-xs">Dev server logs</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="text-xs bg-background px-2 py-1 rounded border font-mono">
+                .vscode/settings.json
+              </code>
+              <span className="text-muted-foreground text-xs">IDE color customization</span>
             </div>
           </div>
         </CardContent>

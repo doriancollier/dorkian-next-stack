@@ -21,7 +21,7 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 |-----------|-------|----------|
 | Commands | 43 | `.claude/commands/` |
 | Agents | 7 | `.claude/agents/` |
-| Skills | 9 | `.claude/skills/` |
+| Skills | 10 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
 | Hooks | 9 | `.claude/settings.json` |
 | MCP Servers | 5 | `.mcp.json` |
@@ -90,6 +90,7 @@ Skills provide reusable expertise that Claude applies automatically when relevan
 | `organizing-fsd-architecture` | Feature-Sliced Design, layer organization | Structuring features, file placement, imports |
 | `working-with-prisma` | Prisma 7 patterns, DAL conventions | Schema design, database queries, migrations |
 | `generating-images-replicate` | Replicate MCP for image generation, processing | Image generation, background removal, upscaling |
+| `vectorizing-images` | Raster-to-vector conversion with @neplex/vectorizer | Converting PNG/JPG to SVG, logo production |
 | `managing-roadmap-moscow` | MoSCoW prioritization, roadmap utilities | Product planning, prioritization decisions |
 | `writing-developer-guides` | Developer guide structure for AI agents | Creating/updating files in developer-guides/ |
 
@@ -239,7 +240,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── product-manager.md
 │   └── research-expert.md
 │
-├── skills/                # Reusable expertise (9 total)
+├── skills/                # Reusable expertise (10 total)
 │   ├── proactive-clarification/
 │   ├── debugging-systematically/
 │   ├── designing-frontend/
@@ -247,6 +248,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── organizing-fsd-architecture/
 │   ├── working-with-prisma/
 │   ├── generating-images-replicate/
+│   ├── vectorizing-images/
 │   ├── managing-roadmap-moscow/
 │   └── writing-developer-guides/
 │

@@ -924,6 +924,7 @@ See `.claude/skills/generating-images-replicate/SKILL.md` for complete documenta
 | `debugging-systematically` | Investigating bugs — methodology, patterns, troubleshooting |
 | `working-with-prisma` | Database work — schema design, DAL patterns, queries |
 | `generating-images-replicate` | Image work — generation, background removal, upscaling, processing, web integration |
+| `vectorizing-images` | Raster-to-vector conversion — PNG/JPG to SVG using @neplex/vectorizer |
 | `managing-roadmap-moscow` | Roadmap work — MoSCoW prioritization, roadmap utilities |
 | `writing-developer-guides` | Creating/updating developer-guides/ — optimal structure for AI agents |
 

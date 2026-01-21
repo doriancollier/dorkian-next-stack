@@ -13,6 +13,8 @@ This skill guides **image generation and processing workflows** using the Replic
 | Task | Tool/Command |
 |------|--------------|
 | Generate image | `mcp__replicate__create_models_predictions` (nano-banana) |
+| Generate logo (vector) | `mcp__replicate__create_models_predictions` (recraft-v3-svg) |
+| Generate logo (raster) | `mcp__replicate__create_models_predictions` (ideogram-v3-turbo) |
 | Remove background | `mcp__replicate__create_models_predictions` (cjwbw/rembg) |
 | Upscale image | `mcp__replicate__create_models_predictions` (nightmareai/real-esrgan) |
 | Search models | `mcp__replicate__search` |
@@ -35,9 +37,14 @@ Choose the right model for the task:
 | Model | Use Case | Speed | Quality | Cost |
 |-------|----------|-------|---------|------|
 | `google/nano-banana` | General image gen/editing, versatile | Fast (~6s) | High | $$ |
-| `google/nano-banana-pro` | Higher quality, up to 2K resolution | Medium | Very High | $$$ |
-| `black-forest-labs/flux-schnell` | Fast prototyping, local dev | Fastest | Good | $ |
+| `google/nano-banana-pro` | Higher quality, up to 2K resolution | Medium (~28s) | Very High | $$$ |
+| `black-forest-labs/flux-schnell` | Fast prototyping, local dev | Fastest (~2s) | Good | $ |
+| `black-forest-labs/flux-1.1-pro` | Excellent prompt adherence | Fast (~3.5s) | High | $$ |
+| `black-forest-labs/flux-2-pro` | Latest Flux, improved detail | Medium (~10s) | Excellent | $$$ |
 | `black-forest-labs/flux-kontext-pro` | Image editing with text prompts | Medium | High | $$ |
+| `recraft-ai/recraft-v3-svg` | **Logos** — native SVG vector output | Medium (~11s) | Excellent | $$ |
+| `recraft-ai/recraft-v3` | Illustrations, 2D art styles | Fast (~7s) | High | $$ |
+| `ideogram-ai/ideogram-v3-turbo` | Text rendering, wordmarks | Fast (~5s) | High | $$ |
 | `google/imagen-4` | Google's flagship text-to-image | Slow | Excellent | $$$ |
 | `google/imagen-4-ultra` | Highest quality (when it matters) | Slowest | Best | $$$$ |
 | `bytedance/seedream-4` | Text-to-image + editing, up to 4K | Medium | Excellent | $$$ |
@@ -60,6 +67,103 @@ For most use cases, **Nano Banana** is the recommended default because:
 | Editing existing images with text | `flux-kontext-pro` |
 | Highest possible quality | `imagen-4-ultra` |
 | Text rendering in images | `imagen-4` or `seedream-4` |
+| **Logo generation (vector)** | `recraft-v3-svg` |
+| **Logo generation (raster)** | `ideogram-v3-turbo` |
+| **Wordmarks with text** | `ideogram-v3-turbo` |
+
+## Logo Generation
+
+Generate professional logos with wordmarks and icons. **Key insight**: For production logos, use `recraft-ai/recraft-v3-svg` — it's the only model that outputs native SVG vectors, essential for logos that need to scale from favicons to billboards.
+
+### Logo Model Recommendations
+
+| Model | Best For | Output | Speed | Notes |
+|-------|----------|--------|-------|-------|
+| `recraft-ai/recraft-v3-svg` | Production logos | SVG (vector) | ~11s | **Only model with native vector output** |
+| `ideogram-ai/ideogram-v3-turbo` | Wordmarks, text-heavy logos | PNG | ~5s | Superior text rendering |
+| `black-forest-labs/flux-2-pro` | High detail conceptual logos | PNG | ~10s | Latest Flux, excellent prompt adherence |
+| `google/nano-banana-pro` | Detailed logo concepts | PNG | ~28s | Highest detail, slower |
+| `recraft-ai/recraft-v3` | Quick logo iterations | WebP | ~7s | Use `style: "digital_illustration/2d_art_poster"` |
+| `google/nano-banana` | Fast logo prototyping | PNG | ~6s | Good for initial concepts |
+
+### Logo Prompt Pattern
+
+Use this template for consistent results:
+
+```
+A professional modern logo for [company type] called '[Name]'.
+The logo features a minimalist [icon description] combined with
+the wordmark '[NAME]' in a clean sans-serif font.
+Clean white background, vector style, suitable for business use.
+```
+
+**Example:**
+```
+A professional modern logo for a tech startup called 'Lumina'.
+The logo features a minimalist lightbulb icon combined with
+the wordmark 'LUMINA' in a clean sans-serif font.
+Clean white background, vector style, suitable for business use.
+```
+
+### Logo Generation Workflow
+
+```typescript
+// For production logos (SVG vector output)
+mcp__replicate__create_models_predictions({
+  model_owner: "recraft-ai",
+  model_name: "recraft-v3-svg",
+  input: {
+    prompt: "A professional modern logo for a tech startup called 'Lumina'. The logo features a minimalist lightbulb icon combined with the wordmark 'LUMINA' in a clean sans-serif font. Clean white background, vector style, suitable for business use."
+  },
+  Prefer: "wait",
+  jq_filter: "{id, status, output, error}"
+})
+
+// For text-heavy logos/wordmarks
+mcp__replicate__create_models_predictions({
+  model_owner: "ideogram-ai",
+  model_name: "ideogram-v3-turbo",
+  input: {
+    prompt: "...",
+    aspect_ratio: "1:1"
+  },
+  Prefer: "wait",
+  jq_filter: "{id, status, output, error}"
+})
+```
+
+### Important Gotchas
+
+| Issue | Solution |
+|-------|----------|
+| `recraft-v3` style "logo" doesn't exist | Use `style: "digital_illustration/2d_art_poster"` instead |
+| `laion-ai/erlich` (logo model) returns 404 | Model is deprecated — use alternatives above |
+| Wordmark text is garbled | Use `ideogram-v3-turbo` — best text rendering |
+| Need scalable output | Use `recraft-v3-svg` — only model with SVG output |
+
+### File Organization for Logos
+
+Store logo iterations in a dedicated subfolder:
+
+```
+.temp/
+└── images/
+    └── logos/           # Logo iterations
+        ├── concept-v1.png
+        ├── concept-v2.png
+        └── final.svg    # SVG from recraft-v3-svg
+```
+
+### Multi-Model Comparison
+
+When comparing models for logo quality, generate with the same prompt across models:
+
+```bash
+# Create comparison directory
+mkdir -p .temp/images/logo-comparison/{recraft-v3-svg,ideogram-v3-turbo,flux-2-pro,nano-banana-pro}
+```
+
+Then generate with each model, download to respective folders, and review side-by-side.
 
 ## Generation Workflow
 
@@ -509,8 +613,16 @@ import Image from 'next/image'
 
 ### Generation Models
 - Nano Banana: https://replicate.com/google/nano-banana
+- Nano Banana Pro: https://replicate.com/google/nano-banana-pro
 - Flux Schnell: https://replicate.com/black-forest-labs/flux-schnell
+- Flux 1.1 Pro: https://replicate.com/black-forest-labs/flux-1.1-pro
+- Flux 2 Pro: https://replicate.com/black-forest-labs/flux-2-pro
 - Imagen 4: https://replicate.com/google/imagen-4
+
+### Logo Models
+- Recraft V3 SVG (vector logos): https://replicate.com/recraft-ai/recraft-v3-svg
+- Recraft V3 (raster): https://replicate.com/recraft-ai/recraft-v3
+- Ideogram V3 Turbo (text/wordmarks): https://replicate.com/ideogram-ai/ideogram-v3-turbo
 
 ### Processing Models
 - Background Removal (rembg): https://replicate.com/cjwbw/rembg

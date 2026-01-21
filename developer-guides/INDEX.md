@@ -19,6 +19,7 @@ This file maps code areas to their relevant developer guides. It serves three pu
 | [07-animations.md](./07-animations.md) | Motion library patterns, transitions | `**/*animation*.ts`, `**/*motion*.tsx`, components with `motion.` |
 | [08-styling-theming.md](./08-styling-theming.md) | Tailwind v4, Shadcn UI, theming | `src/app/globals.css`, `src/layers/shared/ui/**`, `src/components/ui/**`, `tailwind.config.*` |
 | [09-authentication.md](./09-authentication.md) | BetterAuth, sessions, OTP, auth utilities | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/layers/shared/api/auth.ts`, `src/app/(auth)/**`, `src/app/api/auth/**` |
+| [10-metadata-seo.md](./10-metadata-seo.md) | Metadata API, favicons, Open Graph, JSON-LD, SEO, AEO | `src/app/**/layout.tsx`, `src/app/**/page.tsx`, `src/app/sitemap.ts`, `src/app/robots.ts`, `src/app/**/opengraph-image.tsx`, `public/manifest.webmanifest` |
 
 ## Pattern Matching Reference
 
@@ -152,6 +153,32 @@ keywords:
   - "getCurrentUser"
   - "requireAuth"
   - "OTP"
+
+# Guide: 10-metadata-seo.md
+patterns:
+  - "src/app/**/layout.tsx"
+  - "src/app/**/page.tsx"
+  - "src/app/sitemap.ts"
+  - "src/app/robots.ts"
+  - "src/app/**/opengraph-image.tsx"
+  - "public/manifest.webmanifest"
+  - "public/favicon*"
+  - "public/apple-touch-icon.png"
+keywords:
+  - "metadata"
+  - "Metadata"
+  - "generateMetadata"
+  - "title"
+  - "description"
+  - "openGraph"
+  - "twitter"
+  - "favicon"
+  - "sitemap"
+  - "robots"
+  - "SEO"
+  - "JSON-LD"
+  - "structured data"
+  - "schema.org"
 ```
 
 ## Maintenance Tracking
@@ -167,6 +194,7 @@ keywords:
 | 07-animations.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
 | 08-styling-theming.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
 | 09-authentication.md | 2025-12-22 | Claude | Created with AI-optimized format (already follows template) |
+| 10-metadata-seo.md | 2025-12-23 | Claude | Created: Covers Metadata API, favicons, OG, JSON-LD, SEO, AEO with Next.js-specific patterns |
 
 ## How to Use This Index
 
