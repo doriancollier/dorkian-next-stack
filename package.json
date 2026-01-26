@@ -21,7 +21,7 @@
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "@hookform/resolvers": "^5.2.2",
-    "@modelcontextprotocol/sdk": "^1.24.3",
+    "@modelcontextprotocol/sdk": "^1.25.3",
     "@prisma/adapter-better-sqlite3": "^7.2.0",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-query": "^5.90.12",
@@ -35,7 +35,7 @@
     "geist": "^1.5.1",
     "input-otp": "^1.4.2",
     "jiti": "^2.6.1",
-    "lodash-es": "^4.17.22",
+    "lodash-es": "^4.17.23",
     "lucide-react": "^0.556.0",
     "mcp-handler": "^1.0.4",
     "motion": "^12.23.26",
