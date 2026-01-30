@@ -1,7 +1,7 @@
 ---
 description: Implement a validated specification by orchestrating concurrent agents
 category: validation
-allowed-tools: Task, Read, TodoWrite, Grep, Glob, Bash(claudekit:status stm), Bash(stm:*), Bash(jq:*)
+allowed-tools: Task, TaskOutput, Read, Write, Grep, Glob, Bash(jq:*), Bash(grep:*), Bash(cat:*), Bash(echo:*), Bash(date:*), Bash(mkdir:*), TaskCreate, TaskList, TaskGet, TaskUpdate, AskUserQuestion
 argument-hint: "<path-to-spec-file>"
 ---
 
@@ -9,1144 +9,212 @@ argument-hint: "<path-to-spec-file>"
 
 Implement the specification at: $ARGUMENTS
 
-!claudekit status stm
+## Context-Saving Architecture
 
-## Extract Feature Slug
+This command uses a **parallel background agent** pattern for maximum efficiency:
 
-Extract the feature slug from the spec path:
-- If path is `specs/<slug>/02-specification.md` → slug is `<slug>`
-- If path is `specs/feat-<slug>.md` (legacy) → slug is `feat-<slug>`
-- If path is `specs/fix-<issue>-<desc>.md` (legacy) → slug is `fix-<issue>-<desc>`
+1. **Main context**: Lightweight orchestration only (~10% of context)
+2. **Analysis agent**: Session parsing, context building (isolated)
+3. **Implementation agents**: Parallel task execution (isolated, concurrent)
 
-Store the slug for use in:
-1. Filtering STM tasks: `stm list --tag feature:<slug>`
-2. Implementation summary path: `specs/<slug>/04-implementation.md`
+**Context savings**: ~85-90% reduction vs sequential foreground execution
 
-Example: `specs/add-user-auth/02-specification.md` → slug is `add-user-auth`
+**Performance gain**: Parallelizable tasks run concurrently instead of sequentially
 
-## Session Detection & Resume
+---
 
-**Purpose:** Support multi-session implementation with session continuity. This allows you to resume from where you left off instead of starting over.
+## Phase 1: Setup (Main Context - Lightweight)
 
-### How It Works
-
-When you run `/spec:execute`, the command automatically:
-
-1. **Detects Previous Sessions:** Checks if `specs/<slug>/04-implementation.md` exists
-2. **Loads Context:** Extracts completed tasks, in-progress tasks, files modified, known issues
-3. **Filters Task List:** Skips completed tasks, resumes in-progress tasks
-4. **Provides Agent Context:** Agents receive full history (completed work, design decisions, known issues)
-5. **Tracks Sessions:** Appends Session N to implementation summary, preserving all history
-
-### Implementation
+### 1.1 Extract Feature Slug
 
 ```bash
-# Check for existing implementation summary
+SPEC_FILE="$ARGUMENTS"
+SLUG=$(echo "$SPEC_FILE" | cut -d'/' -f2)
+TASKS_FILE="specs/$SLUG/03-tasks.md"
 IMPL_FILE="specs/$SLUG/04-implementation.md"
-RESUME_MODE=false
-SESSION_NUM=1
-
-if [ -f "$IMPL_FILE" ]; then
-  echo "🔄 Detected previous implementation session"
-  RESUME_MODE=true
-
-  # Extract last session number
-  LAST_SESSION=$(grep -E "^### Session [0-9]+" "$IMPL_FILE" | \
-    sed -E 's/### Session ([0-9]+).*/\1/' | \
-    sort -n | \
-    tail -1)
-
-  SESSION_NUM=$((LAST_SESSION + 1))
-
-  # Extract last session date
-  LAST_DATE=$(grep -E "^### Session $LAST_SESSION -" "$IMPL_FILE" | \
-    sed -E 's/### Session [0-9]+ - (.*)/\1/')
-
-  # Count completed tasks (all ✅ markers)
-  COMPLETED_COUNT=$(grep -c "^- ✅ \[Task" "$IMPL_FILE" || echo "0")
-
-  # Extract in-progress task (if any)
-  IN_PROGRESS_TASK=$(awk '/^## Tasks In Progress/,/^## / {print}' "$IMPL_FILE" | \
-    grep -E "^- 🔄 \[Task" | \
-    head -1 | \
-    sed -E 's/- 🔄 \[Task ([0-9]+)\].*/\1/')
-
-  # Extract files modified
-  FILES_MODIFIED=$(awk '/^## Files Modified\/Created/,/^## / {print}' "$IMPL_FILE" | \
-    grep -E "^\s*-" | \
-    head -5)
-
-  echo "📋 Resume Information:"
-  echo "  - Last session: Session $LAST_SESSION on $LAST_DATE"
-  echo "  - Tasks completed: $COMPLETED_COUNT"
-  if [ -n "$IN_PROGRESS_TASK" ]; then
-    echo "  - In-progress task: Task $IN_PROGRESS_TASK (will resume)"
-  fi
-  echo "  - Files modified (recent):"
-  echo "$FILES_MODIFIED" | sed 's/^/    /'
-  echo ""
-  echo "Starting Session $SESSION_NUM..."
-  echo ""
-else
-  echo "🚀 Starting new implementation (Session 1)"
-  echo ""
-fi
 ```
 
-### Parse Implementation Summary
-
-Extract structured data from previous sessions:
-
-```bash
-# Function: parse_implementation_summary
-# Extracts structured data from 04-implementation.md
-# Args: impl_file, session_num (optional - if provided, only parse that session)
-parse_implementation_summary() {
-  local impl_file="$1"
-  local target_session="$2"  # Optional
-
-  if [ ! -f "$impl_file" ]; then
-    echo "error:no_file"
-    return 1
-  fi
-
-  # Extract completed tasks (all sessions or specific session)
-  if [ -n "$target_session" ]; then
-    # Get tasks from specific session
-    COMPLETED_TASKS=$(awk "/^### Session $target_session -/,/^### Session [0-9]+|^## /" "$impl_file" | \
-      grep -E "^- ✅ \[Task ([0-9]+)\]" | \
-      sed -E 's/.*\[Task ([0-9]+)\].*/\1/' | \
-      tr '\n' ',' | \
-      sed 's/,$//')
-  else
-    # Get all completed tasks
-    COMPLETED_TASKS=$(grep -E "^- ✅ \[Task ([0-9]+)\]" "$impl_file" | \
-      sed -E 's/.*\[Task ([0-9]+)\].*/\1/' | \
-      tr '\n' ',' | \
-      sed 's/,$//')
-  fi
-
-  # Extract files modified (source files)
-  SOURCE_FILES=$(awk '/^## Files Modified\/Created/,/^## / {print}' "$impl_file" | \
-    awk '/^\*\*Source files:\*\*/,/^\*\*/ {print}' | \
-    grep -E "^\s*-" | \
-    sed 's/^\s*- //' | \
-    tr '\n' '|' | \
-    sed 's/|$//')
-
-  # Extract test files
-  TEST_FILES=$(awk '/^## Files Modified\/Created/,/^## / {print}' "$impl_file" | \
-    awk '/^\*\*Test files:\*\*/,/^\*\*/ {print}' | \
-    grep -E "^\s*-" | \
-    sed 's/^\s*- //' | \
-    tr '\n' '|' | \
-    sed 's/|$//')
-
-  # Extract known issues
-  KNOWN_ISSUES=$(awk '/^## Known Issues\/Limitations/,/^## / {print}' "$impl_file" | \
-    grep -E "^\s*-" | \
-    sed 's/^\s*- //' | \
-    tr '\n' '|' | \
-    sed 's/|$//')
-
-  # Extract in-progress tasks
-  INPROGRESS_TASK=$(awk '/^## Tasks In Progress/,/^## / {print}' "$impl_file" | \
-    grep -E "^- 🔄 \[Task ([0-9]+)\]" | \
-    sed -E 's/.*\[Task ([0-9]+)\].*/\1/' | \
-    head -1)
-
-  INPROGRESS_STATUS=$(awk '/^## Tasks In Progress/,/^## / {print}' "$impl_file" | \
-    grep -A 2 "^- 🔄 \[Task" | \
-    grep "Current status:" | \
-    sed 's/.*Current status: //')
-
-  # Output structured data
-  echo "completed_tasks:$COMPLETED_TASKS"
-  echo "source_files:$SOURCE_FILES"
-  echo "test_files:$TEST_FILES"
-  echo "known_issues:$KNOWN_ISSUES"
-  echo "inprogress_task:$INPROGRESS_TASK"
-  echo "inprogress_status:$INPROGRESS_STATUS"
-}
-
-# Load previous session data if resuming
-if [ "$RESUME_MODE" = true ]; then
-  PREV_SESSION_DATA=$(parse_implementation_summary "$IMPL_FILE")
-fi
+Display:
+```
+📋 Executing specification: $ARGUMENTS
+   Feature slug: [slug]
 ```
 
-### Filter Completed Tasks
+### 1.2 Quick Validation
 
-Build execution plan by filtering out completed work:
+Perform lightweight checks in main context:
 
-```bash
-# Function: build_filtered_task_list
-# Filters task list to skip completed tasks
-# Args: slug, completed_tasks (comma-separated IDs)
-build_filtered_task_list() {
-  local slug="$1"
-  local completed_tasks="$2"
+1. **Verify spec exists**: Check `$SPEC_FILE` exists
+2. **Verify tasks exist**: Use `TaskList()` to check for tasks with `[<slug>]` in subject
+   - If no tasks → Display: "⚠️ No tasks found. Run `/spec:decompose` first."
+   - Exit early
 
-  # Get all tasks for this feature from STM
-  ALL_TASKS=$(stm list --tags "feature:$slug" -f json)
+3. **Quick session check**: Check if `$IMPL_FILE` exists
+   - If exists → Resume mode detected
+   - If not → New session
 
-  if [ -z "$completed_tasks" ]; then
-    # No completed tasks, return all pending/in-progress
-    FILTERED_TASKS=$(echo "$ALL_TASKS" | \
-      jq -r '[.[] | select(.status == "pending" or .status == "in-progress")] | sort_by(.tags | map(select(startswith("phase"))) | .[0])')
-  else
-    # Filter out completed tasks
-    FILTERED_TASKS=$(echo "$ALL_TASKS" | \
-      jq -r --arg completed "$completed_tasks" '
-        [.[] |
-         select(.status == "pending" or .status == "in-progress") |
-         select((.id | tostring) as $id | ($completed | split(",") | index($id)) == null)
-        ] |
-        sort_by(.tags | map(select(startswith("phase"))) | .[0])')
-  fi
-
-  # Count tasks by status
-  COMPLETED_COUNT=$(echo "$completed_tasks" | tr ',' '\n' | wc -l | tr -d ' ')
-  PENDING_COUNT=$(echo "$FILTERED_TASKS" | jq '[.[] | select(.status == "pending")] | length')
-  INPROGRESS_COUNT=$(echo "$FILTERED_TASKS" | jq '[.[] | select(.status == "in-progress")] | length')
-
-  echo "📊 Execution Plan:"
-  echo "  - ✅ Completed: $COMPLETED_COUNT tasks (skipping)"
-  if [ "$INPROGRESS_COUNT" -gt 0 ]; then
-    echo "  - 🔄 In Progress: $INPROGRESS_COUNT task (will resume)"
-  fi
-  echo "  - ⏳ Pending: $PENDING_COUNT tasks (will execute)"
-  echo ""
-
-  echo "$FILTERED_TASKS"
-}
-
-# Build filtered task list if resuming
-if [ "$RESUME_MODE" = true ]; then
-  COMPLETED_TASKS=$(echo "$PREV_SESSION_DATA" | grep "^completed_tasks:" | cut -d: -f2)
-  TASK_LIST=$(build_filtered_task_list "$SLUG" "$COMPLETED_TASKS")
-else
-  TASK_LIST=$(stm list --tags "feature:$SLUG" --status pending -f json)
-fi
+Display:
+```
+🔍 Quick validation:
+   ✅ Specification found
+   ✅ Tasks found: [count] tasks for [slug]
+   [🆕 New implementation / 🔄 Resuming previous session]
 ```
 
-### Resume In-Progress Task
+---
 
-Provide full context when resuming interrupted work:
+## Phase 2: Spawn Analysis Agent
 
-```bash
-# Function: resume_inprogress_task
-# Resumes in-progress task with context from previous session
-# Args: task_id, prev_session_data
-resume_inprogress_task() {
-  local task_id="$1"
-  local prev_data="$2"
-
-  # Get task details
-  TASK_INFO=$(stm show "$task_id" -f json)
-  TASK_TITLE=$(echo "$TASK_INFO" | jq -r '.title')
-  TASK_DETAILS=$(echo "$TASK_INFO" | jq -r '.details')
-
-  # Extract context from previous session
-  PROGRESS_NOTE=$(echo "$prev_data" | grep "^inprogress_status:" | cut -d: -f2-)
-  FILES_DONE=$(echo "$prev_data" | grep "^source_files:" | cut -d: -f2 | tr '|' '\n')
-  KNOWN_ISSUES=$(echo "$prev_data" | grep "^known_issues:" | cut -d: -f2 | tr '|' '\n')
-
-  # Build resume context
-  RESUME_CONTEXT="
-RESUMING TASK FROM PREVIOUS SESSION
-
-**Previous Progress:**
-$PROGRESS_NOTE
-
-**Files Already Modified:**
-$FILES_DONE
-
-**Known Issues from Previous Session:**
-$KNOWN_ISSUES
-
-**Your Goal:**
-Resume work on: $TASK_TITLE
-
-IMPORTANT:
-- DO NOT restart from scratch
-- Review the files already modified to understand what's done
-- Continue from where the previous session left off
-- Address any known issues if applicable
-"
-
-  echo "🔄 Resuming Task $task_id: $TASK_TITLE"
-  echo ""
-  echo "$RESUME_CONTEXT"
-  echo ""
-
-  # Return context for agent invocation
-  echo "$RESUME_CONTEXT"
-}
-
-# Check for in-progress task
-if [ "$RESUME_MODE" = true ]; then
-  INPROGRESS_TASK=$(echo "$PREV_SESSION_DATA" | grep "^inprogress_task:" | cut -d: -f2)
-
-  if [ -n "$INPROGRESS_TASK" ]; then
-    RESUME_CONTEXT=$(resume_inprogress_task "$INPROGRESS_TASK" "$PREV_SESSION_DATA")
-    # This context will be included in the agent prompt
-  fi
-fi
-```
-
-### Cross-Reference STM Task Status
-
-Reconcile STM status with implementation summary:
-
-```bash
-# Function: cross_reference_task_status
-# Cross-references STM task status with implementation summary
-# Args: slug, summary_completed (comma-separated task IDs)
-cross_reference_task_status() {
-  local slug="$1"
-  local summary_completed="$2"
-
-  # Get STM tasks marked as done
-  STM_DONE=$(stm list --tags "feature:$slug" --status done -f json | \
-    jq -r '.[].id' | \
-    tr '\n' ',' | \
-    sed 's/,$//')
-
-  DISCREPANCIES=()
-
-  # Check: STM says done, but not in summary?
-  if [ -n "$STM_DONE" ]; then
-    for task_id in $(echo "$STM_DONE" | tr ',' ' '); do
-      if ! echo "$summary_completed" | grep -q "\b$task_id\b"; then
-        TASK_TITLE=$(stm show "$task_id" -f json | jq -r '.title')
-        DISCREPANCIES+=("⚠️  Task $task_id marked done in STM but not in summary: $TASK_TITLE")
-      fi
-    done
-  fi
-
-  # Check: Summary says done, but not in STM? (auto-reconcile)
-  if [ -n "$summary_completed" ]; then
-    for task_id in $(echo "$summary_completed" | tr ',' ' '); do
-      STM_STATUS=$(stm show "$task_id" -f json 2>/dev/null | jq -r '.status')
-      if [ "$STM_STATUS" != "done" ] && [ "$STM_STATUS" != "null" ]; then
-        TASK_TITLE=$(stm show "$task_id" -f json | jq -r '.title')
-        echo "🔧 Auto-reconciling: Marking Task $task_id as done in STM (trusts summary)"
-        stm update "$task_id" --status done
-      fi
-    done
-  fi
-
-  # Display discrepancies
-  if [ ${#DISCREPANCIES[@]} -gt 0 ]; then
-    echo "⚠️  Status Discrepancies Detected:"
-    for disc in "${DISCREPANCIES[@]}"; do
-      echo "   $disc"
-    done
-    echo ""
-    echo "Note: Summary is considered source of truth. Review if needed."
-    echo ""
-  fi
-}
-
-# Reconcile status if resuming
-if [ "$RESUME_MODE" = true ]; then
-  COMPLETED_TASKS=$(echo "$PREV_SESSION_DATA" | grep "^completed_tasks:" | cut -d: -f2)
-  cross_reference_task_status "$SLUG" "$COMPLETED_TASKS"
-fi
-```
-
-### Detect Spec Conflicts
-
-Warn if spec changed after task completion:
-
-```bash
-# Function: detect_spec_conflicts
-# Detects if spec was updated after tasks were completed
-# Args: slug, completed_tasks (comma-separated IDs)
-detect_spec_conflicts() {
-  local slug="$1"
-  local completed_tasks="$2"
-  local spec_file="specs/$slug/02-specification.md"
-
-  if [ ! -f "$spec_file" ]; then
-    return
-  fi
-
-  # Get latest changelog date from spec
-  LATEST_CHANGELOG=$(awk '/^## Changelog/,/^## / {print}' "$spec_file" | \
-    grep -E "^\*\*[0-9]{4}-[0-9]{2}-[0-9]{2}" | \
-    head -1 | \
-    sed -E 's/\*\*([0-9]{4}-[0-9]{2}-[0-9]{2})\*\*.*/\1/')
-
-  if [ -z "$LATEST_CHANGELOG" ]; then
-    return  # No changelog entries
-  fi
-
-  CHANGELOG_TS=$(date -j -f "%Y-%m-%d" "$LATEST_CHANGELOG" "+%s" 2>/dev/null || echo "0")
-
-  CONFLICTS=()
-
-  # Check each completed task
-  for task_id in $(echo "$completed_tasks" | tr ',' ' '); do
-    TASK_INFO=$(stm show "$task_id" -f json 2>/dev/null)
-    if [ -z "$TASK_INFO" ]; then
-      continue
-    fi
-
-    TASK_UPDATED=$(echo "$TASK_INFO" | jq -r '.updated')
-    TASK_TS=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${TASK_UPDATED:0:19}" "+%s" 2>/dev/null || echo "0")
-
-    if [ "$CHANGELOG_TS" -gt "$TASK_TS" ]; then
-      TASK_TITLE=$(echo "$TASK_INFO" | jq -r '.title')
-      CONFLICTS+=("Task $task_id: $TASK_TITLE (completed before spec update)")
-    fi
-  done
-
-  if [ ${#CONFLICTS[@]} -gt 0 ]; then
-    echo "⚠️  SPEC CONFLICT DETECTED"
-    echo ""
-    echo "The specification was updated AFTER these tasks were completed:"
-    for conflict in "${CONFLICTS[@]}"; do
-      echo "  - $conflict"
-    done
-    echo ""
-    echo "This may mean these tasks need to be re-executed to incorporate spec changes."
-    echo ""
-    read -p "Would you like to mark these tasks for re-execution? (y/n): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-      for task_id in $(echo "${CONFLICTS[@]}" | grep -Eo "Task [0-9]+" | awk '{print $2}'); do
-        echo "  Marking Task $task_id as pending..."
-        stm update "$task_id" --status pending
-      done
-      echo "✅ Tasks marked for re-execution"
-      echo ""
-    else
-      echo "Proceeding without re-execution. Review manually if needed."
-      echo ""
-    fi
-  fi
-}
-
-# Check for conflicts if resuming
-if [ "$RESUME_MODE" = true ]; then
-  COMPLETED_TASKS=$(echo "$PREV_SESSION_DATA" | grep "^completed_tasks:" | cut -d: -f2)
-  detect_spec_conflicts "$SLUG" "$COMPLETED_TASKS"
-fi
-```
-
-### Build Agent Context
-
-Provide comprehensive cross-session context to agents:
-
-```bash
-# Function: build_agent_context
-# Builds cross-session context for agents
-# Args: slug, task_id, prev_session_data
-build_agent_context() {
-  local slug="$1"
-  local task_id="$2"
-  local prev_data="$3"
-
-  # Extract completed tasks
-  COMPLETED_IDS=$(echo "$prev_data" | grep "^completed_tasks:" | cut -d: -f2)
-  COMPLETED_LIST=""
-  if [ -n "$COMPLETED_IDS" ]; then
-    for cid in $(echo "$COMPLETED_IDS" | tr ',' ' '); do
-      CTITLE=$(stm show "$cid" -f json 2>/dev/null | jq -r '.title')
-      COMPLETED_LIST="$COMPLETED_LIST\n- Task $cid: $CTITLE"
-    done
-  fi
-
-  # Extract files modified
-  SOURCE_FILES=$(echo "$prev_data" | grep "^source_files:" | cut -d: -f2 | tr '|' '\n' | sed 's/^/  - /')
-
-  # Extract tests written
-  TEST_FILES=$(echo "$prev_data" | grep "^test_files:" | cut -d: -f2 | tr '|' '\n' | sed 's/^/  - /')
-
-  # Extract known issues
-  KNOWN_ISSUES=$(echo "$prev_data" | grep "^known_issues:" | cut -d: -f2 | tr '|' '\n' | sed 's/^/  - /')
-
-  # Extract design decisions from implementation notes (last 5 sessions)
-  IMPL_FILE="specs/$slug/04-implementation.md"
-  DESIGN_DECISIONS=""
-  if [ -f "$IMPL_FILE" ]; then
-    DESIGN_DECISIONS=$(awk '/^## Implementation Notes/,/^## / {print}' "$IMPL_FILE" | \
-      grep -A 10 "^### Session" | \
-      tail -50)
-  fi
-
-  # Get current task details
-  CURRENT_TASK=$(stm show "$task_id" -f json)
-  TASK_TITLE=$(echo "$CURRENT_TASK" | jq -r '.title')
-  TASK_DETAILS=$(echo "$CURRENT_TASK" | jq -r '.details')
-
-  # Build context
-  CONTEXT="
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CROSS-SESSION CONTEXT (Feature: $slug)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-**Completed Tasks in Previous Sessions:**
-$COMPLETED_LIST
-
-**Files Already Modified:**
-$SOURCE_FILES
-
-**Tests Already Written:**
-$TEST_FILES
-
-**Known Issues to Be Aware Of:**
-$KNOWN_ISSUES
-
-**Design Decisions from Previous Sessions:**
-$DESIGN_DECISIONS
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CURRENT TASK
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-**Task $task_id: $TASK_TITLE**
-
-$TASK_DETAILS
-
-**Your Goal:**
-Build on the existing implementation. Review the files already modified to understand the current state. Ensure your work integrates properly with what's already been done.
-"
-
-  echo "$CONTEXT"
-}
-
-# This function is called when launching agents in the implementation workflow
-# Include the context in the agent prompt:
-#
-# Task tool:
-# - description: "Implement [component]"
-# - subagent_type: [specialist]
-# - prompt: |
-#     $(build_agent_context "$SLUG" "$TASK_ID" "$PREV_SESSION_DATA")
-#
-#     [Rest of agent prompt...]
-```
-
-### Update Implementation Summary
-
-Append new session without overwriting history:
-
-```bash
-# Function: update_implementation_summary
-# Appends new session to implementation summary
-# Args: slug, session_num, completed_tasks, files_modified, tests_added
-update_implementation_summary() {
-  local slug="$1"
-  local session_num="$2"
-  local completed_tasks="$3"    # JSON array or comma-separated
-  local files_modified="$4"     # Pipe-separated
-  local tests_added="$5"        # Pipe-separated
-
-  local impl_file="specs/$slug/04-implementation.md"
-
-  if [ ! -f "$impl_file" ]; then
-    echo "Error: Implementation file not found"
-    return 1
-  fi
-
-  # Build session section
-  SESSION_DATE=$(date "+%Y-%m-%d")
-  SESSION_SECTION="
-### Session $session_num - $SESSION_DATE
-
-"
-
-  # Format completed tasks
-  for task_id in $(echo "$completed_tasks" | tr ',' ' '); do
-    TASK_INFO=$(stm show "$task_id" -f json)
-    TASK_TITLE=$(echo "$TASK_INFO" | jq -r '.title')
-    SESSION_SECTION="$SESSION_SECTION- ✅ [Task $task_id] $TASK_TITLE
-"
-  done
-
-  # Create temp file with updated content
-  TMP_FILE=$(mktemp)
-
-  # Insert session section after "## Tasks Completed" header
-  awk -v section="$SESSION_SECTION" '
-    /^## Tasks Completed/ {
-      print
-      print ""
-      print section
-      next
-    }
-    {print}
-  ' "$impl_file" > "$TMP_FILE"
-
-  # Update file lists (source files)
-  if [ -n "$files_modified" ]; then
-    for file in $(echo "$files_modified" | tr '|' ' '); do
-      # Check if file already in list
-      if ! grep -q "$file" "$TMP_FILE"; then
-        # Append to Source files section
-        awk -v file="  - $file" '
-          /^\*\*Source files:\*\*/ {
-            print
-            getline
-            print
-            print file
-            next
-          }
-          {print}
-        ' "$TMP_FILE" > "$TMP_FILE.2"
-        mv "$TMP_FILE.2" "$TMP_FILE"
-      fi
-    done
-  fi
-
-  # Update test lists
-  if [ -n "$tests_added" ]; then
-    for test in $(echo "$tests_added" | tr '|' ' '); do
-      if ! grep -q "$test" "$TMP_FILE"; then
-        awk -v test="  - $test" '
-          /^- Unit tests:/ {
-            print
-            print test
-            next
-          }
-          {print}
-        ' "$TMP_FILE" > "$TMP_FILE.2"
-        mv "$TMP_FILE.2" "$TMP_FILE"
-      fi
-    done
-  fi
-
-  # Update task completion count
-  TOTAL_COMPLETED=$(grep -c "^- ✅ \[Task" "$TMP_FILE" || echo "0")
-  sed -i '' "s/\*\*Tasks Completed:\*\* [0-9]*/\*\*Tasks Completed:\*\* $TOTAL_COMPLETED/" "$TMP_FILE"
-
-  # Update last session date
-  sed -i '' "s/\*\*Last Session:\*\* .*/\*\*Last Session:\*\* $SESSION_DATE/" "$TMP_FILE"
-
-  # Replace original file
-  mv "$TMP_FILE" "$impl_file"
-
-  echo "✅ Updated implementation summary (Session $session_num)"
-}
-
-# Call this function after completing tasks in the current session
-# Example: update_implementation_summary "$SLUG" "$SESSION_NUM" "23,24,25" ".claude/commands/spec/execute.md" ""
-```
-
-### Example: Multi-Session Workflow
-
-**First Execution:**
-```bash
-$ /spec:execute specs/add-user-auth/02-specification.md
-
-🚀 Starting new implementation (Session 1)
-
-📊 Execution Plan:
-  - ⏳ Pending: 8 tasks (will execute)
-
-Proceeding with implementation...
-[Implements Tasks 1-5, runs out of time]
-
-✅ Implementation summary created: specs/add-user-auth/04-implementation.md
-```
-
-**After feedback creates new tasks:**
-```bash
-$ /spec:feedback specs/add-user-auth/02-specification.md
-[Creates feedback log, updates spec changelog]
-$ /spec:decompose specs/add-user-auth/02-specification.md
-[Adds Tasks 9-12 for feedback items]
-```
-
-**Resume Execution:**
-```bash
-$ /spec:execute specs/add-user-auth/02-specification.md
-
-🔄 Detected previous implementation session
-
-📋 Resume Information:
-  - Last session: Session 1 on 2025-11-21
-  - Tasks completed: 5
-  - In-progress task: Task 6 (will resume)
-  - Files modified (recent):
-    - src/auth/login.ts
-    - src/auth/register.ts
-    - tests/auth/login.test.ts
-
-Starting Session 2...
-
-📊 Execution Plan:
-  - ✅ Completed: 5 tasks (skipping)
-  - 🔄 In Progress: 1 task (will resume)
-  - ⏳ Pending: 6 tasks (will execute)
-
-🔄 Resuming Task 6: Implement password reset flow
-
-[Provides agent with full context from Session 1]
-[Completes Task 6, Tasks 7-12]
-
-✅ Implementation summary updated (Session 2)
-```
-
-### Session Continuity Features
-
-- **Smart Resume:** Automatically detects and resumes from previous sessions
-- **No Duplication:** Skips completed tasks, only works on new/in-progress items
-- **History Preservation:** All session data preserved in 04-implementation.md
-- **Conflict Detection:** Warns if spec changed after task completion
-- **Cross-Session Context:** Agents receive full history (completed work, design decisions, known issues)
-
-## Pre-Execution Checks
-
-1. **Check Task Management**:
-   - If STM shows "Available but not initialized" → Run `stm init` first, then `/spec:decompose` to create tasks
-   - If STM shows "Available and initialized" → Use STM for tasks
-   - If STM shows "Not installed" → Use TodoWrite instead
-
-2. **Verify Specification**:
-   - Confirm spec file exists and is complete
-   - Check that required tools are available
-   - Stop if anything is missing or unclear
-
-## Implementation Process
-
-### 1. Analyze Specification and Previous Progress
-
-**Read the specification** at the path provided to understand:
-- What components need to be built
-- Dependencies between components
-- Testing requirements
-- Success criteria
-
-**Session Detection & Resume** (automatic):
-The command automatically detects previous implementation sessions and loads context:
-
-1. **Checks for existing `04-implementation.md`**
-2. **Extracts session data:**
-   - Last session number and date
-   - Tasks already completed
-   - Tasks in progress
-   - Files already modified/created
-   - Tests already written
-   - Known issues encountered
-3. **Displays resume information** to user
-4. **Loads previous session data** for use throughout execution
-5. **Filters task list** to skip completed work
-6. **Reconciles STM status** with implementation summary
-7. **Detects spec conflicts** (spec updated after task completion)
-
-See "Session Detection & Resume" section above for implementation details.
-
-If the file doesn't exist, this is the first execution run (Session 1).
-
-### 2. Load or Create Tasks
-
-**Using STM** (if available):
-```bash
-# Filter by feature slug to see only this feature's tasks
-stm list --status pending --tag feature:<slug> -f json
-```
-
-**Using TodoWrite** (fallback):
-Create tasks for each component in the specification
-
-### 3. Implementation Workflow
-
-For each task, follow this cycle:
-
-**Available Agents:**
-!`claudekit list agents`
-
-#### Background Agent Orchestration (Parallel Execution)
-
-For tasks that can run in parallel (no dependencies), use background agents to maximize efficiency:
-
-**When to use background agents:**
-- Multiple independent tasks in the same phase
-- Long-running implementation while continuing with other work
-- Code review running while you prepare next task
-
-**Pattern: Launch multiple agents in background, collect results later:**
+Launch a background agent to handle heavy session parsing and execution planning.
 
 ```
-# Step 1: Launch agents in background (returns immediately)
-Task tool:
-- description: "Implement ComponentA"
-- subagent_type: react-tanstack-expert
-- run_in_background: true  # <-- Background execution
-- prompt: |
-    Implement ComponentA...
-# Returns task_id_1 immediately
-
-Task tool:
-- description: "Implement ComponentB"
-- subagent_type: prisma-expert
-- run_in_background: true
-- prompt: |
-    Implement ComponentB...
-# Returns task_id_2 immediately
-
-# Step 2: Continue with other work while agents execute
-# (e.g., update todos, prepare test strategy, review spec)
-
-# Step 3: Collect results when ready
-TaskOutput:
-- task_id: [task_id_1]
-- block: true  # Wait for completion
-
-TaskOutput:
-- task_id: [task_id_2]
-- block: true
+Task(
+  description: "Analyze [slug] execution plan",
+  prompt: <see ANALYSIS_AGENT_PROMPT>,
+  subagent_type: "general-purpose",
+  run_in_background: true
+)
 ```
 
-**When NOT to use background agents:**
-- Sequential tasks with dependencies (B needs A's output)
-- When you need immediate feedback to decide next steps
-- Single-task execution
-
-#### Step 1: Implement
-
-Launch appropriate specialist agent with cross-session context:
-
+Display:
 ```
-Task tool:
-- description: "Implement [component name]"
-- subagent_type: [choose specialist that matches the task]
-- prompt: |
-    # Cross-Session Context (if resuming)
-    $(if [ "$RESUME_MODE" = true ]; then build_agent_context "$SLUG" "[task-id]" "$PREV_SESSION_DATA"; fi)
-
-    # Current Task
-    First run: stm show [task-id]
-    This will give you the full task details and requirements.
-
-    Then implement the component based on those requirements.
-    Follow project code style and add error handling.
-
-    If resuming: Review files already modified to understand existing work.
-    Build on what's already been done, don't restart from scratch.
-
-    Report back when complete.
+🔄 Analyzing tasks and building execution plan...
 ```
 
-**Note:** The `build_agent_context` function automatically provides agents with:
-- Completed tasks from previous sessions
-- Files already modified
-- Tests already written
-- Known issues to be aware of
-- Design decisions from previous sessions
-
-#### Step 2: Write Tests
-
-Launch testing expert:
-
+Then immediately wait for the analysis to complete:
 ```
-Task tool:
-- description: "Write tests for [component]"
-- subagent_type: testing-expert [or jest/vitest-testing-expert]
-- prompt: |
-    First run: stm show [task-id]
-    
-    Write comprehensive tests for the implemented component.
-    Cover edge cases and aim for >80% coverage.
-    Report back when complete.
+TaskOutput(task_id: "<analysis-agent-id>", block: true)
 ```
 
-Then run tests to verify they pass.
+The analysis agent returns a structured execution plan.
 
-#### Step 3: Code Review (Required)
+---
 
-**Important:** Always run code review to verify both quality AND completeness. Task cannot be marked done without passing both.
+## Phase 3: Execute Task Batches (Parallel Background Agents)
 
-Launch code review expert:
+Using the execution plan from the analysis agent, execute tasks in parallel batches.
+
+### 3.1 Display Execution Plan
 
 ```
-Task tool:
-- description: "Review [component]"
-- subagent_type: code-review-expert
-- prompt: |
-    First run: stm show [task-id]
-    
-    Review implementation for BOTH:
-    1. COMPLETENESS - Are all requirements from the task fully implemented?
-    2. QUALITY - Code quality, security, error handling, test coverage
-    
-    Categorize any issues as: CRITICAL, IMPORTANT, or MINOR.
-    Report if implementation is COMPLETE or INCOMPLETE.
-    Report back with findings.
+═══════════════════════════════════════════════════
+              EXECUTION PLAN
+═══════════════════════════════════════════════════
+
+📊 Task Summary:
+   ✅ Completed: [X] tasks (skipping)
+   🔄 In Progress: [Y] tasks (will resume)
+   ⏳ Pending: [Z] tasks (will execute)
+
+📦 Execution Batches (parallel groups):
+   Batch 1: [Task 1.1, 1.2, 1.3] - No dependencies
+   Batch 2: [Task 2.1, 2.2] - Depends on Batch 1
+   Batch 3: [Task 2.3, 2.4, 2.5] - Depends on Batch 2
+   ...
+
+⏱️  Estimated: [N] parallel batches
+    (vs [M] sequential tasks without parallelization)
+
+═══════════════════════════════════════════════════
 ```
 
-#### Step 4: Fix Issues & Complete Implementation
+### 3.2 Ask User to Proceed
 
-If code review found the implementation INCOMPLETE or has CRITICAL issues:
-
-1. Launch specialist to complete/fix:
-   ```
-   Task tool:
-   - description: "Complete/fix [component]"
-   - subagent_type: [specialist matching the task]
-   - prompt: |
-       First run: stm show [task-id]
-       
-       Address these items from code review:
-       - Missing requirements: [list any incomplete items]
-       - Critical issues: [list any critical issues]
-       
-       Update tests if needed.
-       Report back when complete.
-   ```
-
-2. Re-run tests to verify fixes
-
-3. Re-review to confirm both COMPLETE and quality standards met
-
-4. Only when implementation is COMPLETE and all critical issues fixed:
-   - If using STM: `stm update [task-id] --status done`
-   - If using TodoWrite: Mark task as completed
-
-#### Step 5: Commit Changes
-
-Create atomic commit following project conventions:
-```bash
-git add [files]
-git commit -m "[follow project's commit convention]"
+```
+AskUserQuestion:
+  "Ready to execute [Z] tasks in [N] parallel batches?"
+  Options:
+  - "Execute all batches" (Recommended) - Run all tasks to completion
+  - "Execute one batch" - Run only the first batch, then pause
+  - "Review tasks first" - Show detailed task list before executing
 ```
 
-### 4. Track Progress
+### 3.3 Execute Each Batch
 
-Monitor implementation progress:
+For each batch in the execution plan:
 
-**Using STM:**
-```bash
-stm list --pretty --tag feature:<slug>              # View this feature's tasks
-stm list --status pending --tag feature:<slug>      # Pending tasks for this feature
-stm list --status in-progress --tag feature:<slug>  # Active tasks for this feature
-stm list --status done --tag feature:<slug>         # Completed tasks for this feature
+**Step A: Launch all tasks in batch as background agents**
+
 ```
-
-**Using TodoWrite:**
-Track tasks in the session with status indicators.
-
-### 5. Create or Update Implementation Summary
-
-**Throughout implementation** (not just at the end), maintain an implementation summary:
-
-**Output path:** `specs/<slug>/04-implementation.md` (or `IMPLEMENTATION_SUMMARY.md` for legacy paths)
-
-**When to update:**
-- After completing each major task or milestone
-- When encountering blockers or issues
-- At the end of an execution session
-- When all tasks are complete
-
-**How to update:**
-- **First time:** Create file with initial structure (Session 1)
-- **Resume sessions:** Use `update_implementation_summary` function to append Session N
-- **IMPORTANT:** Always preserve existing content - never overwrite previous sessions
-- Add new completed tasks to current session section
-- Append new files/tests to master lists (avoid duplicates)
-- Update task counts, dates, and status
-
-**Use the provided function:**
-```bash
-update_implementation_summary "$SLUG" "$SESSION_NUM" "23,24,25" "file1.ts|file2.ts" "test1.test.ts"
-```
-
-This function:
-- Appends new Session N section under "Tasks Completed"
-- Updates file lists without duplicates
-- Updates test lists without duplicates
-- Recalculates total task completion count
-- Updates last session date
-- Preserves all previous session history
-
-**Content structure:**
-
-```markdown
-# Implementation Summary: {Feature Name}
-
-**Created:** {initial-date}
-**Last Updated:** {current-date}
-**Spec:** specs/{slug}/02-specification.md
-**Tasks:** specs/{slug}/03-tasks.md
-
-## Overview
-
-{Brief description of what's being implemented}
-
-## Progress
-
-**Status:** {In Progress / Complete}
-**Tasks Completed:** {X} / {Total}
-**Last Session:** {current-date}
-
-## Tasks Completed
-
-### Session {N} - {date}
-- ✅ [Task ID] {Task description}
-  - Files modified: {list}
-  - Tests added: {list}
-  - Notes: {any relevant notes}
-
-### Session {N-1} - {date}
-- ✅ [Task ID] {Task description}
-  - Files modified: {list}
-  - Tests added: {list}
-  - Notes: {any relevant notes}
-
-## Tasks In Progress
-
-- 🔄 [Task ID] {Task description}
-  - Started: {date}
-  - Current status: {description}
-  - Blockers: {any blockers}
-
-## Tasks Pending
-
-- ⏳ [Task ID] {Task description}
-- ⏳ [Task ID] {Task description}
-
-## Files Modified/Created
-
-{Organized list of all files changed, grouped by type:}
-- **Source files:** {list}
-- **Test files:** {list}
-- **Configuration files:** {list}
-- **Documentation files:** {list}
-
-## Tests Added
-
-{Summary of test coverage:}
-- Unit tests: {count and key files}
-- Integration tests: {count and key files}
-- E2E tests: {count and key files}
-
-## Known Issues/Limitations
-
-{Any known issues, edge cases, or limitations}
-- {Issue 1} - {Impact and potential solution}
-- {Issue 2} - {Impact and potential solution}
-
-## Blockers
-
-{Any current blockers preventing progress:}
-- {Blocker 1} - {What's needed to unblock}
-- {Blocker 2} - {What's needed to unblock}
-
-## Next Steps
-
-{Recommended follow-up actions:}
-- [ ] {Action 1}
-- [ ] {Action 2}
-
-## Implementation Notes
-
-### Session {N}
-{Notes about this session's implementation, design decisions, or context}
-
-### Session {N-1}
-{Previous session notes}
-
-## Session History
-
-- **{current-date}:** {Tasks completed this session}
-- **{previous-date}:** {Tasks completed in previous session}
-```
-
-**Important:** Always preserve existing content when updating. Append new sessions rather than replacing old ones.
-
-### 6. Complete Implementation
-
-Implementation is complete when:
-- All tasks are COMPLETE (all requirements implemented)
-- All tasks pass quality review (no critical issues)
-- All tests passing
-- Documentation updated
-- Implementation summary created
-
-### 7. Roadmap Integration (If Applicable)
-
-After all tasks are completed:
-
-1. Check if `specs/{slug}/01-ideation.md` or `specs/{slug}/02-specification.md` contains `roadmapId` in frontmatter
-2. If found, extract the roadmapId value
-3. Update roadmap status to completed:
-   ```bash
-   python3 roadmap/scripts/update_status.py $ROADMAP_ID completed
-   ```
-4. Update all linked artifacts:
-   ```bash
-   python3 roadmap/scripts/link_spec.py $ROADMAP_ID $SLUG
-   ```
-5. The link_spec.py will populate linkedArtifacts with all existing spec file paths
-
-### 8. Documentation Review Check
-
-After all tasks are completed, automatically check if implementation may have affected developer guides:
-
-**How it works:**
-
-1. Read `developer-guides/INDEX.md` to get the pattern-to-guide mapping
-2. Compare files modified during implementation against guide patterns
-3. Surface any guides that may need review
-
-**Implementation:**
-
-```bash
-# Function: check_docs_relevance
-# Checks if implementation touched areas covered by developer guides
-# Args: files_modified (pipe-separated list)
-check_docs_relevance() {
-  local files_modified="$1"
-  local affected_guides=()
-
-  # Pattern mappings from INDEX.md (simplified for bash)
-  # Guide: patterns
-  declare -A GUIDE_PATTERNS=(
-    ["01-project-structure.md"]="src/layers|page.tsx|layout.tsx"
-    ["02-environment-variables.md"]="env.ts|.env|config.ts"
-    ["03-database-prisma.md"]="prisma|entities/*/api|lib/prisma|generated/prisma"
-    ["04-forms-validation.md"]="form|schema|model/types"
-    ["05-data-fetching.md"]="app/api|api/queries|api/mutations|query-client"
-    ["06-state-management.md"]="store|hooks/"
-    ["07-animations.md"]="animation|motion"
-    ["08-styling-theming.md"]="globals.css|shared/ui|components/ui|tailwind"
+# For each task in current batch, launch in parallel:
+for task in batch.tasks:
+  Task(
+    description: "Implement [task.subject]",
+    prompt: <see IMPLEMENTATION_AGENT_PROMPT with task details>,
+    subagent_type: <specialist matching task type>,
+    run_in_background: true
   )
-
-  # Check each file against patterns
-  for file in $(echo "$files_modified" | tr '|' '\n'); do
-    for guide in "${!GUIDE_PATTERNS[@]}"; do
-      patterns="${GUIDE_PATTERNS[$guide]}"
-      for pattern in $(echo "$patterns" | tr '|' '\n'); do
-        if echo "$file" | grep -q "$pattern"; then
-          # Add guide to affected list (avoid duplicates)
-          if [[ ! " ${affected_guides[*]} " =~ " ${guide} " ]]; then
-            affected_guides+=("$guide")
-          fi
-        fi
-      done
-    done
-  done
-
-  echo "${affected_guides[@]}"
-}
-
-# Get files modified from implementation summary
-FILES_MODIFIED=$(awk '/^## Files Modified\/Created/,/^## / {print}' "specs/$SLUG/04-implementation.md" | \
-  grep -E "^\s*-" | \
-  sed 's/^\s*- //' | \
-  tr '\n' '|' | \
-  sed 's/|$//')
-
-AFFECTED_GUIDES=$(check_docs_relevance "$FILES_MODIFIED")
+  # Store task_id for later collection
 ```
 
-**Display to User:**
+Display:
+```
+🚀 Batch [N]: Launching [X] parallel agents
+   → [Task 1.1] Implement user authentication schema
+   → [Task 1.2] Create login form component
+   → [Task 1.3] Set up session middleware
+```
 
-If any guides may be affected, display:
+**Step B: Wait for all agents in batch to complete**
+
+```
+# Collect results from all background agents
+for agent_id in batch.agent_ids:
+  result = TaskOutput(task_id: agent_id, block: true)
+  # Process result, check for failures
+```
+
+Display (as each completes):
+```
+   ✅ [Task 1.1] Completed (2m 34s)
+   ✅ [Task 1.2] Completed (1m 45s)
+   ⚠️ [Task 1.3] Completed with warnings
+```
+
+**Step C: Handle failures**
+
+If any task failed:
+```
+⚠️ Batch [N] had failures:
+   ❌ [Task 1.3]: [Error description]
+
+Options:
+- "Retry failed tasks" - Re-launch failed tasks
+- "Skip and continue" - Mark as blocked, proceed to next batch
+- "Stop execution" - Pause for manual intervention
+```
+
+**Step D: Update task status and proceed**
+
+```
+# Mark all successful tasks as completed
+for task in batch.successful_tasks:
+  TaskUpdate({ taskId: task.id, status: "completed" })
+
+# Proceed to next batch
+```
+
+Display:
+```
+✅ Batch [N] complete: [X]/[Y] tasks succeeded
+   Proceeding to Batch [N+1]...
+```
+
+---
+
+## Phase 4: Summary and Documentation Check
+
+After all batches complete:
+
+### 4.1 Update Implementation Summary
+
+The final batch agent updates `specs/<slug>/04-implementation.md` with:
+- All completed tasks
+- Files modified
+- Tests added
+- Known issues
+
+### 4.2 Display Completion Summary
 
 ```
 ═══════════════════════════════════════════════════
@@ -1155,27 +223,385 @@ If any guides may be affected, display:
 
 ✅ All tasks completed successfully
 
+📊 Summary:
+   - Tasks completed: [X]
+   - Files modified: [Y]
+   - Tests added: [Z]
+   - Execution time: [T]
+
+📄 Implementation summary: specs/[slug]/04-implementation.md
+
 📚 Documentation Review
    Files changed touch areas covered by:
-   • 03-database-prisma.md (Prisma patterns, DAL)
-   • 05-data-fetching.md (TanStack Query, API routes)
+   • [guide-1.md]
+   • [guide-2.md]
 
-   These guides may need updates to reflect new patterns.
+   Run /docs:reconcile to check for drift
 
-   Options:
-   • Run /docs:reconcile to check for drift
-   • Run /spec:doc-update specs/<slug>/02-specification.md for full review
+🎉 Next steps:
+   - Run /git:commit to commit changes
+   - Run /spec:feedback if you have feedback to incorporate
 
 ═══════════════════════════════════════════════════
 ```
 
-If no guides are affected, display a simpler completion message without the documentation section.
+### 4.3 Roadmap Integration
 
-**Important:** This is a suggestion, not a blocker. The user can choose to review documentation or skip.
+If spec has `roadmapId` in frontmatter:
+```bash
+python3 roadmap/scripts/update_status.py $ROADMAP_ID completed
+python3 roadmap/scripts/link_spec.py $ROADMAP_ID $SLUG
+```
 
-## If Issues Arise
+---
 
-If any agent encounters problems:
-1. Identify the specific issue
-2. Launch appropriate specialist to resolve
-3. Or request user assistance if blocked
+## ANALYSIS_AGENT_PROMPT
+
+```
+You are analyzing a specification execution to build an optimized execution plan.
+
+## Context
+- **Spec File**: [SPEC_PATH]
+- **Feature Slug**: [SLUG]
+- **Implementation File**: specs/[SLUG]/04-implementation.md
+- **Tasks File**: specs/[SLUG]/03-tasks.md
+
+## Your Tasks
+
+### 1. Load All Tasks
+
+Use `TaskList()` to get all tasks for this feature:
+```
+tasks = TaskList()
+feature_tasks = tasks.filter(t => t.subject.includes("[<slug>]"))
+```
+
+Categorize by status:
+- `completed`: Skip these
+- `in_progress`: Resume these first
+- `pending`: Execute these
+
+### 2. Parse Session Context (if resuming)
+
+If `specs/[SLUG]/04-implementation.md` exists:
+
+1. **Extract session number**: Find last "### Session N" header
+2. **Extract completed tasks**: All tasks marked with ✅
+3. **Extract files modified**: From "Files Modified/Created" section
+4. **Extract known issues**: From "Known Issues" section
+5. **Extract in-progress status**: From "Tasks In Progress" section
+
+Build cross-session context string for agents.
+
+### 3. Build Execution Batches
+
+Group tasks into parallel batches using dependency analysis:
+
+```
+# Get pending/in-progress tasks
+executable_tasks = feature_tasks.filter(t =>
+  t.status === "pending" || t.status === "in_progress"
+)
+
+# Build batches based on blockedBy
+batches = []
+remaining = [...executable_tasks]
+
+while remaining.length > 0:
+  # Find tasks with no remaining dependencies (or all deps completed)
+  ready = remaining.filter(t =>
+    t.blockedBy.length === 0 ||
+    all_completed(t.blockedBy)
+  )
+
+  if ready.length === 0:
+    # Circular dependency or missing task - break cycle
+    ready = [remaining[0]]
+
+  batches.push(ready)
+  remaining = remaining.filter(t => !ready.includes(t))
+```
+
+### 4. Determine Agent Types
+
+For each task, determine the appropriate specialist agent:
+
+| Task Pattern | Agent Type |
+|-------------|------------|
+| Database, Prisma, schema, migration | `prisma-expert` |
+| React, component, UI, form | `react-tanstack-expert` |
+| TypeScript, types, generics | `typescript-expert` |
+| Zod, validation, schema | `zod-forms-expert` |
+| API, route, endpoint | `general-purpose` |
+| Test, spec, coverage | `general-purpose` |
+| Default | `general-purpose` |
+
+### 5. Return Execution Plan
+
+Return a structured execution plan in this format:
+
+```
+## EXECUTION PLAN
+
+### Session Info
+- **Session Number**: [N]
+- **Resume Mode**: [true/false]
+- **Previous Session Date**: [date or N/A]
+
+### Task Summary
+- **Completed (skip)**: [count]
+- **In Progress (resume)**: [count]
+- **Pending (execute)**: [count]
+- **Total Executable**: [count]
+
+### Cross-Session Context
+[If resuming, include the context string to pass to agents]
+
+### Execution Batches
+
+#### Batch 1 (No dependencies)
+| Task ID | Subject | Agent Type | Size |
+|---------|---------|------------|------|
+| [id] | [subject] | [agent] | [S/M/L] |
+
+#### Batch 2 (Depends on Batch 1)
+| Task ID | Subject | Agent Type | Size |
+|---------|---------|------------|------|
+| [id] | [subject] | [agent] | [S/M/L] |
+
+[Continue for all batches...]
+
+### Parallelization Summary
+- **Total batches**: [N]
+- **Max parallel tasks**: [M] (in Batch [X])
+- **Sequential equivalent**: [T] tasks
+- **Parallelization factor**: [T/N]x speedup potential
+```
+```
+
+---
+
+## IMPLEMENTATION_AGENT_PROMPT
+
+```
+You are implementing a task from a specification.
+
+## Cross-Session Context
+[Inserted from execution plan if resuming]
+
+## Current Task
+
+Use `TaskGet({ taskId: "[TASK_ID]" })` to get the full task details.
+
+The task description contains ALL implementation details including:
+- Technical requirements
+- Code examples to implement
+- Acceptance criteria
+- Test requirements
+
+## Your Workflow
+
+### Step 1: Understand the Task
+- Read the full task description from TaskGet
+- Identify files to create/modify
+- Note any dependencies on other components
+
+### Step 2: Implement
+- Write the code following project conventions
+- Follow FSD architecture (check which layer: entities, features, widgets)
+- Add proper error handling
+- Include TypeScript types
+
+### Step 3: Write Tests
+- Write tests for the implementation
+- Cover happy path and edge cases
+- Ensure tests pass
+
+### Step 4: Self-Review
+- Check implementation against ALL acceptance criteria
+- Verify no TypeScript errors
+- Ensure code follows project style
+
+### Step 5: Report Results
+
+Return a structured report:
+
+```
+## TASK COMPLETE
+
+### Task
+- **ID**: [task_id]
+- **Subject**: [subject]
+- **Status**: [SUCCESS / PARTIAL / FAILED]
+
+### Files Modified
+- [file1.ts] - [description]
+- [file2.ts] - [description]
+
+### Tests Added
+- [test1.test.ts] - [what it tests]
+
+### Acceptance Criteria
+- [x] Criteria 1
+- [x] Criteria 2
+- [ ] Criteria 3 (partial - reason)
+
+### Issues Encountered
+- [Issue 1] - [how resolved / still open]
+
+### Notes for Next Tasks
+- [Any context that dependent tasks should know]
+```
+
+## Important Guidelines
+
+- **Don't summarize** - Implement everything in the task description
+- **Complete the task** - Don't mark done until ALL acceptance criteria met
+- **Write tests** - Every implementation needs tests
+- **Follow conventions** - Match existing code style in the project
+- **Report honestly** - If something is incomplete, say so
+```
+
+---
+
+## Execution Modes
+
+### Full Execution (Default)
+Execute all batches to completion. Best for:
+- Dedicated implementation sessions
+- When you can wait for all tasks
+
+### Single Batch Mode
+Execute one batch at a time, pause for review. Best for:
+- Large implementations with many tasks
+- When you want to review progress between phases
+
+### Dry Run Mode
+Show execution plan without executing. Best for:
+- Understanding the scope before committing
+- Verifying task dependencies are correct
+
+---
+
+## Error Handling
+
+### Agent Timeout
+If an agent doesn't complete within expected time:
+1. Check agent status with `TaskOutput(task_id, block: false)`
+2. Offer to wait longer or cancel
+
+### Task Failure
+If an agent reports failure:
+1. Display the error details
+2. Offer options: retry, skip, or stop
+3. If skipping, mark dependent tasks as blocked
+
+### Dependency Issues
+If circular dependencies detected:
+1. Display the cycle
+2. Ask user which task to execute first
+3. Or suggest running `/spec:decompose` to fix dependencies
+
+---
+
+## Session Continuity
+
+### How It Works
+
+1. **First run**: Creates `04-implementation.md` with Session 1
+2. **Subsequent runs**: Detects existing file, increments session number
+3. **Context preservation**: Completed tasks, files modified, known issues passed to agents
+4. **No duplication**: Completed tasks skipped automatically
+
+### Implementation Summary Structure
+
+```markdown
+# Implementation Summary: [Feature Name]
+
+**Created:** [date]
+**Last Updated:** [date]
+**Spec:** specs/[slug]/02-specification.md
+
+## Progress
+**Status:** [In Progress / Complete]
+**Tasks Completed:** [X] / [Total]
+
+## Tasks Completed
+
+### Session 2 - [date]
+- ✅ [Task 2.1] Implement user dashboard
+- ✅ [Task 2.2] Add settings page
+
+### Session 1 - [date]
+- ✅ [Task 1.1] Set up authentication
+- ✅ [Task 1.2] Create user schema
+
+## Files Modified/Created
+**Source files:**
+  - src/layers/features/auth/ui/LoginForm.tsx
+  - src/layers/entities/user/api/queries.ts
+
+**Test files:**
+  - __tests__/features/auth/LoginForm.test.tsx
+
+## Known Issues
+- [Issue description]
+
+## Implementation Notes
+### Session 2
+- Design decision: Used Zustand for local state...
+
+### Session 1
+- Initial architecture established...
+```
+
+---
+
+## Usage Examples
+
+```bash
+# Execute a feature specification
+/spec:execute specs/user-authentication/02-specification.md
+
+# Resume a partially completed implementation
+/spec:execute specs/dashboard-redesign/02-specification.md
+# (Automatically detects previous session and resumes)
+```
+
+---
+
+## Integration with Other Commands
+
+| Command | Relationship |
+|---------|--------------|
+| `/spec:decompose` | **Run first** - Creates the tasks to execute |
+| `/spec:feedback` | Run after to incorporate feedback, then re-decompose and re-execute |
+| `/git:commit` | Run after execution to commit changes |
+| `/docs:reconcile` | Run after to check if guides need updates |
+
+---
+
+## Troubleshooting
+
+### "No tasks found"
+Run `/spec:decompose` first to create tasks from the specification.
+
+### "All tasks already completed"
+The implementation is done. Check `04-implementation.md` for summary.
+
+### Agents taking too long
+Large tasks may take several minutes. Use `TaskOutput(block: false)` to check progress.
+
+### Context limits in agents
+Each agent has isolated context. If a single task is too large, consider splitting it in the decompose phase.
+
+---
+
+## Performance Characteristics
+
+| Metric | Sequential | Parallel (This Command) |
+|--------|-----------|------------------------|
+| 10 independent tasks | ~30 min | ~5 min (6x faster) |
+| Context usage | 100% in main | ~15% in main |
+| Failure impact | Blocks all | Only blocks dependents |
+| Progress visibility | After each task | Real-time per batch |

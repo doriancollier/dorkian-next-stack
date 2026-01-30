@@ -1011,6 +1011,46 @@ paths: src/app/api/**/*.ts
 | `/spec:doc-update <path>` | Review docs for updates after spec |
 | `/spec:migrate` | Migrate existing specs to feature directories |
 
+**Task Management Convention**
+
+The spec workflow uses Claude Code's built-in task tools (`TaskCreate`, `TaskList`, `TaskGet`, `TaskUpdate`) with a subject prefix convention for filtering:
+
+```
+Subject format: [<feature-slug>] [P<phase>] <imperative-title>
+Example: [auth-flow] [P1] Create login form component
+```
+
+| Component | Purpose | Example |
+|-----------|---------|---------|
+| `[<slug>]` | Feature grouping | `[auth-flow]`, `[dashboard]` |
+| `[P<n>]` | Phase ordering | `[P1]`, `[P2]`, `[P3]` |
+| Title | Imperative action | `Create login form component` |
+
+**Common task operations:**
+
+```
+# List tasks for a feature
+tasks = TaskList()
+feature_tasks = tasks.filter(t => t.subject.includes("[<slug>]"))
+
+# Filter by status
+pending = feature_tasks.filter(t => t.status === "pending")
+in_progress = feature_tasks.filter(t => t.status === "in_progress")
+completed = feature_tasks.filter(t => t.status === "completed")
+
+# Filter by phase
+phase1 = feature_tasks.filter(t => t.subject.includes("[P1]"))
+
+# Get full task details
+task = TaskGet({ taskId: "<task-id>" })
+
+# Update task status
+TaskUpdate({ taskId: "<task-id>", status: "completed" })
+
+# Set dependencies
+TaskUpdate({ taskId: "<task-id>", addBlockedBy: ["<blocking-task-id>"] })
+```
+
 #### System
 
 | Command | Purpose |
@@ -1154,8 +1194,22 @@ TaskOutput(task_id="<task-id>", block=true)
 - Background agents have isolated context (by design)
 
 **Commands using background agents:**
-- `/spec:execute` — Implementation agents run in background
+- `/spec:decompose` — Heavy decomposition work runs in background (~90% context savings)
+- `/spec:execute` — Parallel batch execution with dependency-aware scheduling (~85% context savings, 3-6x faster)
 - `/ideate` — Research runs in background while drafting
+
+**Parallel execution pattern** (used by `/spec:execute`):
+```
+Phase 1: Analyze tasks, build dependency graph → background agent
+Phase 2: Group into parallel batches by dependencies
+Phase 3: For each batch:
+         → Launch all tasks as background agents (parallel)
+         → Wait for all to complete
+         → Proceed to next batch
+```
+
+**Context savings pattern:**
+Commands that read large files, perform analysis, or create many items benefit from background execution. The main context only sees: setup → spawn agent → receive summary. All intermediate work happens in isolated agent context.
 
 ### Hooks (automatic validation)
 
