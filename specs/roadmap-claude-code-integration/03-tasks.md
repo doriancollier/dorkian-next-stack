@@ -3,7 +3,7 @@
 **Generated:** 2025-12-09
 **Source:** specs/roadmap-claude-code-integration/02-specification.md
 **Slug:** roadmap-claude-code-integration
-**Task Management:** TodoWrite (STM not available)
+**Task Management:** Built-in task tools (TaskCreate, TaskList, TaskGet, TaskUpdate)
 
 ---
 

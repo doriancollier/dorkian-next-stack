@@ -72,6 +72,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.1.5",
+    "ignore": "^7.0.5",
     "jsdom": "^27.3.0",
     "knip": "^5.76.2",
     "postcss": "^8.5.6",
