@@ -1,7 +1,8 @@
 ---
 description: Migrate existing specs to feature-directory structure
 category: validation
-allowed-tools: Read, Write, Bash(mv:*), Bash(mkdir:*), Bash(ls:*), Bash(find:*), Bash(basename:*), Bash(dirname:*), Glob, Grep
+allowed-tools: Read, Write, Bash(mv:*), Bash(mkdir:*), Bash(ls:*), Bash(find:*), Bash(basename:*), Bash(dirname:*), Glob, Grep, TaskList, TaskUpdate
+argument-hint: "[optional: path to specific spec file to migrate]"
 ---
 
 # Migrate Specs to New Directory Structure
@@ -69,18 +70,26 @@ For each spec file (e.g., `specs/feat-user-auth.md`):
    - Check if it mentions this spec/feature
    - If related, move to `specs/<slug>/04-implementation.md`
 
-### Step 3: Update STM Tasks (if STM is installed)
+### Step 3: Update Task Subjects (if tasks exist)
 
 For specs that have been decomposed:
 
-1. **Check if STM is available:** `command -v stm`
-2. **Find tasks related to this spec:**
-   - Search task titles for the slug
-   - Look for tasks that reference the old spec path
-3. **Add feature tag to tasks:**
-   ```bash
-   # For each related task ID
-   stm update <task-id> --add-tags "feature:<slug>"
+1. **Find tasks related to this spec:**
+   ```
+   tasks = TaskList()
+   related = tasks.filter(t =>
+     t.subject.toLowerCase().includes(slug) ||
+     t.description?.includes(oldSpecPath)
+   )
+   ```
+2. **Update task subjects to include feature prefix:**
+   ```
+   for each related task:
+     if (!task.subject.startsWith("[" + slug + "]")):
+       TaskUpdate({
+         taskId: task.id,
+         subject: "[" + slug + "] " + task.subject
+       })
    ```
 
 ### Step 4: Report Migration Results
@@ -90,7 +99,7 @@ Create a migration summary showing:
 - Files moved for each spec
 - Any specs that couldn't be fully migrated
 - Any orphaned files found (no matching spec)
-- STM tasks updated (if applicable)
+- Task subjects updated (if applicable)
 
 ## Safety Checks
 
@@ -113,7 +122,7 @@ After migrating:
 This will:
 1. Scan for all existing specs
 2. Migrate each to the new structure
-3. Update STM tasks with feature tags
+3. Update task subjects with feature prefixes
 4. Generate migration report
 
 ## Migration Report Format
@@ -130,13 +139,13 @@ This will:
 - ✅ Spec: specs/feat-user-auth.md → specs/feat-user-auth/02-specification.md
 - ✅ Tasks: specs/feat-user-auth-tasks.md → specs/feat-user-auth/03-tasks.md
 - ✅ Ideation: docs/ideation/feat-user-auth.md → specs/feat-user-auth/01-ideation.md
-- ✅ STM tasks: 5 tasks tagged with feature:feat-user-auth
+- ✅ Tasks: 5 tasks prefixed with [feat-user-auth]
 
 ### fix-bug-scroll
 - ✅ Spec: specs/fix-bug-scroll.md → specs/fix-bug-scroll/02-specification.md
 - ⚠️ Tasks: Not found
 - ⚠️ Ideation: Not found
-- ⚠️ STM tasks: None found
+- ⚠️ Tasks: None found
 
 ## Issues
 

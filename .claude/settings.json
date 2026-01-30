@@ -26,9 +26,6 @@
       ".git/**"
     ]
   },
-  "environmentVariables": {
-    "NODE_ENV": "development"
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -36,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claudekit-hooks run file-guard"
+            "command": "node .claude/scripts/hooks/file-guard.mjs"
           }
         ]
       }
@@ -47,19 +44,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claudekit-hooks run typecheck-changed"
+            "command": ".claude/scripts/hooks/typecheck-changed.sh"
           },
           {
             "type": "command",
-            "command": "claudekit-hooks run lint-changed"
+            "command": ".claude/scripts/hooks/lint-changed.sh"
           },
           {
             "type": "command",
-            "command": "claudekit-hooks run check-any-changed"
+            "command": "node .claude/scripts/hooks/check-any-changed.mjs"
           },
           {
             "type": "command",
-            "command": "claudekit-hooks run test-changed"
+            "command": ".claude/scripts/hooks/test-changed.sh"
           }
         ]
       }
@@ -69,11 +66,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claudekit-hooks run create-checkpoint"
-          },
-          {
-            "type": "command",
-            "command": "claudekit-hooks run check-todos"
+            "command": ".claude/scripts/hooks/create-checkpoint.sh"
           },
           {
             "type": "command",
@@ -87,12 +80,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claudekit-hooks run thinking-level"
+            "command": ".claude/scripts/hooks/thinking-level.sh"
           }
         ]
       }
     ],
     "SubagentStop": [],
     "SessionStart": []
+  },
+  "enabledPlugins": {},
+  "environmentVariables": {
+    "NODE_ENV": "development"
   }
 }

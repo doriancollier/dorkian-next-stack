@@ -35,7 +35,7 @@ Slash commands are triggered explicitly by typing `/command`. They're expanded p
 
 | Namespace | Commands | Purpose |
 |-----------|----------|---------|
-| `spec/` | create, decompose, execute, feedback, doc-update, migrate | Specification workflow |
+| `spec/` | create, decompose, execute, feedback, doc-update, migrate | Specification workflow (uses built-in task tools with `[slug] [P#]` subject convention) |
 | `git/` | commit, push | Version control with validation |
 | `debug/` | browser, types, test, api, data, logs, rubber-duck, performance | Systematic debugging |
 | `docs/` | reconcile | Documentation drift detection |
@@ -108,7 +108,7 @@ Rules inject context-specific guidance when Claude works with matching files. Ea
 
 ### Hooks (Event-Triggered)
 
-Hooks run automatically at lifecycle events. Configured in `settings.json` via ClaudeKit.
+Hooks run automatically at lifecycle events. Configured in `settings.json` with local scripts in `.claude/scripts/hooks/`.
 
 | Event | Hooks | Purpose |
 |-------|-------|---------|
@@ -440,8 +440,11 @@ ls -la .claude/commands/
 # Verify settings.json syntax
 cat .claude/settings.json | python3 -m json.tool
 
-# Check ClaudeKit is installed
-claudekit-hooks --help
+# Test hooks manually
+echo '{}' | .claude/scripts/hooks/thinking-level.sh
+
+# Check shell scripts are executable
+ls -la .claude/scripts/hooks/
 ```
 
 ### Rules Not Triggering

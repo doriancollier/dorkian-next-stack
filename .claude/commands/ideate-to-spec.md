@@ -694,7 +694,7 @@ If no remaining decisions:
 2. [ ] {If validation failed: Address validation feedback}
 3. [ ] {If validation passed: Run /spec:decompose specs/{slug}/02-specification.md}
 4. [ ] {Then implement with: /spec:execute specs/{slug}/02-specification.md}
-5. [ ] {Track progress with: stm list --pretty --tag feature:{slug}}
+5. [ ] {Track progress with: TaskList() → filter by "[{slug}]"}
 6. [ ] {Any follow-up specs needed}
 ```
 
@@ -707,7 +707,7 @@ If no remaining decisions:
 1. [ ] Review the specification at specs/{slug}/02-specification.md
 2. [ ] Run /spec:decompose specs/{slug}/02-specification.md
 3. [ ] Implement with: /spec:execute specs/{slug}/02-specification.md
-4. [ ] Track progress with: stm list --pretty --tag feature:{slug}
+4. [ ] Track progress with: TaskList() → filter by "[{slug}]"
 ```
 
 **If NEEDS WORK:**

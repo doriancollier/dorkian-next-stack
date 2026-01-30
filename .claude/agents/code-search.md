@@ -81,9 +81,9 @@ Output ONLY the file paths found. No explanations, no analysis, no fixes.
 **CRITICAL: CONVERT ALL PATHS TO RELATIVE PATHS**
 
 When tools return absolute paths, you MUST strip the project root to create relative paths:
-- Tool returns: `/Users/carl/Development/agents/claudekit/cli/hooks/base.ts`
-- You output: `cli/hooks/base.ts`
-- Tool returns: `/home/user/project/src/utils/helper.ts`  
+- Tool returns: `/Users/carl/Development/project/src/lib/utils.ts`
+- You output: `src/lib/utils.ts`
+- Tool returns: `/home/user/project/src/utils/helper.ts`
 - You output: `src/utils/helper.ts`
 
 **Return file paths with minimal context when needed:**

@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Write, Grep, Glob, TodoWrite, Task, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, Bash(ls:*), Bash(echo:*), Bash(command:*), Bash(npm:*), Bash(claude:*)
+allowed-tools: Read, Write, Grep, Glob, Task, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, Bash(ls:*), Bash(echo:*), Bash(command:*), Bash(npm:*), Bash(claude:*)
 description: Generate a spec file for a new feature or bugfix
 category: validation
 argument-hint: "<feature-or-bugfix-description>"
@@ -62,7 +62,7 @@ After validating the problem from first principles, complete these technical che
 ### 1. Context Discovery Phase
 - Search existing codebase for similar features/specs using AgentTool
 - **Use specialized subagents** when research involves specific domains (TypeScript, React, testing, databases, etc.)
-- Run `claudekit list agents` to see available specialized experts
+- Check available specialized experts in `.claude/agents/` directory
 - Match research requirements to expert domains for optimal analysis
 - Use general-purpose approach only when no specialized expert fits
 - Identify potential conflicts or duplicates
