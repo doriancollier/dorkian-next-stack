@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import posthog from 'posthog-js'
 import { authClient } from '@/lib/auth-client'
 import {
   Button,
@@ -32,22 +33,46 @@ export function OtpVerifyForm() {
     setIsLoading(true)
     setError(null)
 
+    // Track OTP verification attempt
+    posthog.capture('otp_verification_started', {
+      email_domain: email.split('@')[1],
+    })
+
     try {
-      const { error } = await authClient.signIn.emailOtp({
+      const { error, data } = await authClient.signIn.emailOtp({
         email,
         otp,
       })
 
       if (error) {
+        // Track verification failure
+        posthog.capture('otp_verification_failed', {
+          error_message: error.message,
+        })
         setError(error.message ?? 'Invalid verification code')
         setOtp('')
         return
       }
 
+      // Track successful verification
+      posthog.capture('otp_verification_succeeded', {
+        email_domain: email.split('@')[1],
+      })
+
+      // Identify the user in PostHog after successful sign-in
+      if (data?.user) {
+        posthog.identify(data.user.id, {
+          email: data.user.email,
+          name: data.user.name,
+        })
+      }
+
       // Success - redirect to dashboard
       router.push('/dashboard')
       router.refresh()
-    } catch {
+    } catch (err) {
+      // Capture exception for error tracking
+      posthog.captureException(err)
       setError('An unexpected error occurred')
       setOtp('')
     } finally {
@@ -59,6 +84,11 @@ export function OtpVerifyForm() {
     setIsLoading(true)
     setError(null)
 
+    // Track resend request
+    posthog.capture('otp_resend_requested', {
+      email_domain: email.split('@')[1],
+    })
+
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({
         email,
@@ -68,6 +98,8 @@ export function OtpVerifyForm() {
       if (error) {
         setError(error.message ?? 'Failed to resend code')
       }
+    } catch (err) {
+      posthog.captureException(err)
     } finally {
       setIsLoading(false)
     }

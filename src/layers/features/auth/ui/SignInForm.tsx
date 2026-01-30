@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import posthog from 'posthog-js'
 import { authClient } from '@/lib/auth-client'
 import {
   Button,
@@ -31,6 +32,11 @@ export function SignInForm() {
     setIsLoading(true)
     setError(null)
 
+    // Track sign-in attempt
+    posthog.capture('sign_in_started', {
+      email_domain: values.email.split('@')[1],
+    })
+
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({
         email: values.email,
@@ -38,14 +44,25 @@ export function SignInForm() {
       })
 
       if (error) {
+        // Track email send failure
+        posthog.capture('sign_in_email_failed', {
+          error_message: error.message,
+        })
         setError(error.message ?? 'Failed to send verification code')
         return
       }
 
+      // Track successful email send
+      posthog.capture('sign_in_email_sent', {
+        email_domain: values.email.split('@')[1],
+      })
+
       // Redirect to verify page with email
       const params = new URLSearchParams({ email: values.email })
       router.push(`/verify?${params.toString()}`)
-    } catch {
+    } catch (err) {
+      // Capture exception for error tracking
+      posthog.captureException(err)
       setError('An unexpected error occurred')
     } finally {
       setIsLoading(false)

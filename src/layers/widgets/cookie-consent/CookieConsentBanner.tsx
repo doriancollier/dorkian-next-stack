@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -50,6 +51,13 @@ export function CookieConsentBanner() {
   const handleClose = (accepted: boolean) => {
     setIsClosing(true)
     setStoredConsent(accepted ? 'accepted' : 'rejected')
+
+    // Track cookie consent decision
+    if (accepted) {
+      posthog.capture('cookie_consent_accepted')
+    } else {
+      posthog.capture('cookie_consent_declined')
+    }
 
     // Wait for animation to complete
     setTimeout(() => {

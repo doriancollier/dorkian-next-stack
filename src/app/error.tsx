@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Home } from 'lucide-react'
 import Link from 'next/link'
@@ -15,6 +16,15 @@ export default function Error({
   useEffect(() => {
     // Log the error to an error reporting service
     console.error('Error:', error)
+
+    // Capture the error in PostHog
+    posthog.captureException(error)
+
+    // Track that an error page was displayed
+    posthog.capture('error_displayed', {
+      error_message: error.message,
+      error_digest: error.digest,
+    })
   }, [error])
 
   return (

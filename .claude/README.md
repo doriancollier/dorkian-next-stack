@@ -25,7 +25,7 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 | Rules | 5 | `.claude/rules/` |
 | Hooks | 9 | `.claude/settings.json` |
 | MCP Servers | 5 | `.mcp.json` |
-| Developer Guides | 9 + INDEX | `developer-guides/` |
+| Developer Guides | 10 + INDEX | `developer-guides/` |
 
 ## Component Types
 
@@ -115,7 +115,7 @@ Hooks run automatically at lifecycle events. Configured in `settings.json` with 
 | `PreToolUse` | file-guard | Block access to sensitive files (.env, .key, .pem) |
 | `PostToolUse` | typecheck-changed, lint-changed, check-any-changed, test-changed | Validate code after edits |
 | `UserPromptSubmit` | thinking-level | Adjust Claude's thinking mode based on prompt complexity |
-| `Stop` | create-checkpoint, check-todos, check-docs-changed | Session cleanup, progress tracking, doc reminders |
+| `Stop` | create-checkpoint, check-docs-changed | Session cleanup, checkpoint creation, doc reminders |
 
 ### MCP Servers
 
@@ -145,6 +145,7 @@ Detailed implementation patterns in `developer-guides/`:
 | `07-animations.md` | Motion library patterns |
 | `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
 | `09-authentication.md` | BetterAuth, sessions, OTP patterns |
+| `10-metadata-seo.md` | Metadata API, favicons, Open Graph, SEO, AEO |
 
 Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
 

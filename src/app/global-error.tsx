@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import posthog from 'posthog-js'
 import { GeistSans } from 'geist/font/sans'
 
 export default function GlobalError({
@@ -13,6 +14,15 @@ export default function GlobalError({
   useEffect(() => {
     // Log the error to an error reporting service
     console.error('Global error:', error)
+
+    // Capture the error in PostHog
+    posthog.captureException(error)
+
+    // Track that a global error page was displayed
+    posthog.capture('global_error_displayed', {
+      error_message: error.message,
+      error_digest: error.digest,
+    })
   }, [error])
 
   return (

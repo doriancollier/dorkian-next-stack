@@ -332,6 +332,8 @@ Detailed implementation patterns live in `developer-guides/`:
 | `06-state-management.md` | Zustand vs TanStack Query decision guide |
 | `07-animations.md` | Motion library patterns |
 | `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
+| `09-authentication.md` | BetterAuth, sessions, OTP patterns |
+| `10-metadata-seo.md` | Metadata API, favicons, Open Graph, SEO |
 
 ### Keeping Guides Up to Date
 
@@ -1216,7 +1218,7 @@ Commands that read large files, perform analysis, or create many items benefit f
 - **PreToolUse**: File guard protection
 - **PostToolUse**: Typecheck, lint, check-any, test changed files
 - **UserPromptSubmit**: Adjust thinking level
-- **Stop**: Create checkpoint, check todos
+- **Stop**: Create checkpoint, check-docs-changed
 
 ### Plan Mode Behavior
 
