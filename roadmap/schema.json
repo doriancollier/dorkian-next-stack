@@ -169,6 +169,47 @@
             }
           },
           "additionalProperties": false
+        },
+        "workflowState": {
+          "type": "object",
+          "description": "Tracks autonomous workflow execution state",
+          "properties": {
+            "phase": {
+              "type": "string",
+              "enum": ["not-started", "ideating", "specifying", "decomposing", "implementing", "testing", "committing", "releasing", "completed"],
+              "description": "Current phase in the autonomous workflow"
+            },
+            "specSlug": {
+              "type": "string",
+              "description": "Slug of the associated spec directory (e.g., 'user-auth')"
+            },
+            "tasksTotal": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Total tasks from decomposition"
+            },
+            "tasksCompleted": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of tasks marked complete"
+            },
+            "lastSession": {
+              "type": "string",
+              "format": "date-time",
+              "description": "ISO timestamp of last work session"
+            },
+            "attempts": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Retry attempts for current phase (resets on phase advance)"
+            },
+            "blockers": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Current blocking issues requiring human intervention"
+            }
+          },
+          "additionalProperties": false
         }
       }
     }

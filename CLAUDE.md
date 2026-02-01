@@ -1130,6 +1130,8 @@ This parses the tasks.md file and creates any missing tasks in the task system.
 | `/roadmap:show` | Display roadmap summary in terminal (CLI-only, no browser) |
 | `/roadmap:open` | Open roadmap visualization at localhost:3000/roadmap |
 | `/roadmap:add <title>` | Add a new roadmap item |
+| `/roadmap:next` | Intelligently select next roadmap item to work on |
+| `/roadmap:work <id>` | Orchestrate full development lifecycle for an item |
 | `/roadmap:prioritize` | Get prioritization suggestions |
 | `/roadmap:analyze` | Full health check and analysis |
 | `/roadmap:validate` | Validate roadmap JSON structure |
@@ -1218,6 +1220,64 @@ python3 roadmap/scripts/find_by_title.py "<title-query>"
 - Check `linkedArtifacts` before creating new specs (avoid duplicates)
 - Use `/roadmap enrich` to populate context before ideation
 - Run `/roadmap validate` after manual edits to roadmap.json
+
+### Autonomous Roadmap Execution
+
+The roadmap system supports autonomous execution of development workflows with human oversight at key checkpoints.
+
+#### Workflow Phases
+
+```
+not-started → ideating → specifying → decomposing → implementing → testing → committing → releasing → completed
+```
+
+| Phase | Command | Human Approval | Auto-Retry |
+|-------|---------|----------------|------------|
+| ideating | `/ideate --roadmap-id <id>` | After completion | No |
+| specifying | `/ideate-to-spec <path>` | After completion | No |
+| decomposing | `/spec:decompose <path>` | No (automatic) | Yes |
+| implementing | `/spec:execute <path>` | No (internal loops) | Yes |
+| testing | `pnpm test` | On persistent failure | Yes (3x) |
+| committing | `/git:commit` + `/git:push` | No | Yes |
+| releasing | `/system:release` | Required | No |
+
+#### State Tracking
+
+Workflow state is persisted in `roadmap.json` under each item's `workflowState` property:
+
+```json
+{
+  "workflowState": {
+    "phase": "implementing",
+    "specSlug": "feature-name",
+    "tasksTotal": 8,
+    "tasksCompleted": 3,
+    "lastSession": "2026-02-01T12:00:00Z",
+    "attempts": 0,
+    "blockers": []
+  }
+}
+```
+
+#### Resumability
+
+If interrupted, run `/roadmap:work <id>` again to resume from the current phase. All progress is persisted.
+
+#### Stop Hook (Ralph Wiggum Loop)
+
+The autonomous system uses a Stop hook to prevent premature termination:
+
+- **Blocks stop** when work is in active phase (implementing, testing, etc.)
+- **Allows stop** on completion signals: `<promise>PHASE_COMPLETE:<phase></promise>`
+- **Allows stop** on abort signal: `<promise>ABORT</promise>`
+- **Fails open** if roadmap is unreadable
+
+#### Self-Correction
+
+During the testing phase, if tests fail:
+1. Claude analyzes failures and attempts fixes
+2. Maximum 3 retry attempts
+3. If still failing, documents blockers and pauses for human intervention
 
 ### Background Agents (async execution)
 
