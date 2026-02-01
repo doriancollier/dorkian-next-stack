@@ -9,7 +9,7 @@ import {
 export const navItems = [
   {
     label: 'Home',
-    href: '/',
+    href: '/system',
     icon: LayoutDashboard,
   },
   {

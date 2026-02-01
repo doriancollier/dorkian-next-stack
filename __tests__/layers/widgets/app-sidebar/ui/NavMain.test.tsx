@@ -52,7 +52,7 @@ describe('NavMain', () => {
     render(<NavMain />, { wrapper: Wrapper })
 
     const homeLink = screen.getByRole('link', { name: /home/i })
-    expect(homeLink).toHaveAttribute('href', '/')
+    expect(homeLink).toHaveAttribute('href', '/system')
   })
 
   it('renders Example link with correct href', () => {
@@ -62,8 +62,8 @@ describe('NavMain', () => {
     expect(exampleLink).toHaveAttribute('href', '/example')
   })
 
-  it('marks Home as active when pathname is "/"', () => {
-    vi.mocked(usePathname).mockReturnValue('/')
+  it('marks Home as active when pathname is "/system"', () => {
+    vi.mocked(usePathname).mockReturnValue('/system')
 
     render(<NavMain />, { wrapper: Wrapper })
 
