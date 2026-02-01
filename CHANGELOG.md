@@ -10,6 +10,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Fixed
+
+---
+
+## [0.1.0-alpha.1] - 2026-02-01
+
+### Added
+
 - Integrate PostHog analytics into Next.js application
 - Add vectorizing-images skill, logo generation docs, and metadata guide
 - Add Replicate MCP image generation skill and sync harness docs
@@ -32,7 +42,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add notification sound management commands
 - Add background agent execution patterns for parallel workflows
 - Integrate Context7 for up-to-date library documentation
-
 - Add release system with changelog automation
 
 ### Changed
