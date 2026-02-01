@@ -10,11 +10,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Integrate roadmap visualization into Next.js app
-
 ### Changed
 
 ### Fixed
+
+---
+
+## [0.2.0-alpha.4] - 2026-02-01
+
+### Added
+
+- Integrate roadmap visualization into Next.js app as React-based feature at `/roadmap`
+- Add three view modes: Timeline (Now/Next/Later), Status, and Priority (MoSCoW)
+- Add Health Dashboard with must-have %, in-progress, and at-risk metrics
+- Add filtering by type, priority, status, and hide completed toggle
+- Add item detail modal with dependencies, linked specs, and ideation context
+- Add URL state persistence for view mode and filters
+- Modernize roadmap commands (`/roadmap:open` now uses Next.js app)
 
 ---
 
