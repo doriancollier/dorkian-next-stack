@@ -23,7 +23,7 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 | Agents | 7 | `.claude/agents/` |
 | Skills | 10 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
-| Hooks | 9 | `.claude/settings.json` |
+| Hooks | 8 | `.claude/settings.json` |
 | MCP Servers | 5 | `.mcp.json` |
 | Developer Guides | 10 + INDEX | `developer-guides/` |
 
