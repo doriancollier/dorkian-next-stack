@@ -10,6 +10,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Fixed
+
+---
+
+## [0.2.0-alpha.6] - 2026-02-01
+
+### Added
+
 - Add roadmap clearing functionality
 - Add autonomous roadmap execution system
 
@@ -17,8 +27,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Add roadmap:clear command to documentation
 - Add comprehensive documentation for autonomous roadmap execution
-
-### Fixed
 
 ---
 
