@@ -14,7 +14,7 @@ export function RoadmapHeader() {
       </div>
       <h1 className="text-3xl font-semibold tracking-tight">{projectName}</h1>
       {projectSummary && (
-        <p className="text-muted-foreground text-lg max-w-2xl">{projectSummary}</p>
+        <p className="text-muted-foreground text-lg">{projectSummary}</p>
       )}
       <p className="text-sm text-muted-foreground">
         Last updated: {formatDate(lastUpdated)}
