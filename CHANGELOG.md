@@ -12,9 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Restructure layout architecture with (system) route group
-
 ### Fixed
+
+---
+
+## [0.2.0-alpha.2] - 2026-02-01
+
+### Changed
+
+- Restructure layout architecture with (system) route group
 
 ---
 
