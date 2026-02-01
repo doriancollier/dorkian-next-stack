@@ -1223,12 +1223,46 @@ python3 roadmap/scripts/find_by_title.py "<title-query>"
 
 ### Autonomous Roadmap Execution
 
-The roadmap system supports autonomous execution of development workflows with human oversight at key checkpoints.
+> **⭐ Novel Feature**: This system enables Claude Code to autonomously execute entire development workflows from ideation to release, with human oversight at strategic checkpoints.
+
+The roadmap system supports autonomous execution of development workflows. Instead of manually invoking each command, you can run `/roadmap:work <id>` and let Claude handle the entire lifecycle.
+
+**Full documentation:** `developer-guides/13-autonomous-roadmap-execution.md`
+
+#### Quick Start
+
+```bash
+# 1. Get intelligent next item recommendation
+/roadmap:next
+
+# 2. Start autonomous execution
+/roadmap:work <id>
+
+# 3. Approve at checkpoints, let Claude handle the rest
+# → Ideation complete? [Approve]
+# → Specification complete? [Approve]
+# → Ready to release? [Create release]
+
+# 4. Done! Feature implemented, tested, committed, released.
+```
 
 #### Workflow Phases
 
 ```
-not-started → ideating → specifying → decomposing → implementing → testing → committing → releasing → completed
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ ideating    │────►│ specifying  │────►│ decomposing │
+│ [Approval]  │     │ [Approval]  │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘
+                                               │
+┌─────────────┐     ┌─────────────┐     ┌──────▼──────┐
+│ releasing   │◄────│ committing  │◄────│implementing │
+│ [Approval]  │     │             │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   ▲                   │
+       ▼                   │            ┌──────▼──────┐
+┌─────────────┐            └────────────│  testing    │
+│ completed   │                         │[Self-Fix x3]│
+└─────────────┘                         └─────────────┘
 ```
 
 | Phase | Command | Human Approval | Auto-Retry |
@@ -1261,7 +1295,7 @@ Workflow state is persisted in `roadmap.json` under each item's `workflowState` 
 
 #### Resumability
 
-If interrupted, run `/roadmap:work <id>` again to resume from the current phase. All progress is persisted.
+If interrupted, run `/roadmap:work <id>` again to resume from the current phase. All progress is persisted — completed tasks, modified files, and current state are maintained across sessions.
 
 #### Stop Hook (Ralph Wiggum Loop)
 
@@ -1278,6 +1312,16 @@ During the testing phase, if tests fail:
 1. Claude analyzes failures and attempts fixes
 2. Maximum 3 retry attempts
 3. If still failing, documents blockers and pauses for human intervention
+
+#### When to Use
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Well-defined feature | ✅ Use `/roadmap:work` |
+| Bug fix with known root cause | ✅ Use `/roadmap:work` |
+| Quick one-file fix | ❌ Just edit directly |
+| Exploratory research | ❌ Use manual commands |
+| First time using system | ⚠️ Start with a small feature |
 
 ### Background Agents (async execution)
 

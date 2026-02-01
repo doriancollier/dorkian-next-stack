@@ -26,7 +26,53 @@ import {
   ShieldCheck,
   LayoutDashboard,
   Cookie,
+  Bot,
+  Workflow,
+  Play,
+  CheckCircle2,
+  RotateCcw,
+  GitBranch,
 } from 'lucide-react'
+
+const featuredFeature = {
+  title: 'Autonomous Roadmap Execution',
+  badge: '⭐ Novel Feature',
+  tagline: 'Let Claude Code drive your entire development workflow',
+  description:
+    'A groundbreaking system that enables Claude Code to autonomously execute complete development lifecycles — from ideation to release — with human oversight at strategic checkpoints.',
+  highlights: [
+    {
+      icon: Workflow,
+      title: 'Full Lifecycle Automation',
+      description:
+        'Chains ideate → spec → decompose → implement → test → commit → release automatically',
+    },
+    {
+      icon: CheckCircle2,
+      title: 'Human Approval Gates',
+      description:
+        'Strategic checkpoints after ideation, specification, and before release',
+    },
+    {
+      icon: RotateCcw,
+      title: 'Self-Correction',
+      description:
+        'Automatically fixes failing tests up to 3 times before pausing for help',
+    },
+    {
+      icon: GitBranch,
+      title: 'Resumable Sessions',
+      description:
+        'State persisted in roadmap.json — pick up where you left off anytime',
+    },
+  ],
+  commands: [
+    { cmd: '/roadmap:next', desc: 'Get intelligent next item recommendation' },
+    { cmd: '/roadmap:work <id>', desc: 'Start autonomous execution' },
+  ],
+  guideHref: '/developer-guides/13-autonomous-roadmap-execution.md',
+  roadmapHref: '/roadmap',
+}
 
 const systemSections = [
   {
@@ -43,11 +89,18 @@ const systemSections = [
       'Commands, agents, skills, and automation that make Claude Code work effectively on this project.',
     href: '/system/claude-code',
     icon: Terminal,
-    stats: '41 commands',
+    stats: '43 commands',
   },
 ]
 
 const developerGuides = [
+  {
+    title: 'Autonomous Execution',
+    description: '⭐ Novel — Full workflow automation',
+    href: '/developer-guides/13-autonomous-roadmap-execution.md',
+    icon: Bot,
+    featured: true,
+  },
   {
     title: 'Project Structure',
     description: 'FSD architecture, file naming, directory layout',
@@ -179,6 +232,132 @@ export default function SystemPage() {
         </p>
       </div>
 
+      {/* Featured: Autonomous Roadmap Execution */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <CardHeader className="relative">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+              <Bot className="size-6 text-primary" />
+            </div>
+            <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+              {featuredFeature.badge}
+            </span>
+          </div>
+          <CardTitle className="text-2xl">{featuredFeature.title}</CardTitle>
+          <p className="text-primary font-medium">{featuredFeature.tagline}</p>
+          <CardDescription className="text-base mt-2">
+            {featuredFeature.description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="relative space-y-6">
+          {/* Highlights Grid */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {featuredFeature.highlights.map((highlight) => (
+              <div
+                key={highlight.title}
+                className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
+              >
+                <highlight.icon className="size-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">{highlight.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {highlight.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Commands */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Key Commands
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {featuredFeature.commands.map((c) => (
+                <div
+                  key={c.cmd}
+                  className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2"
+                >
+                  <code className="text-sm font-mono text-primary">{c.cmd}</code>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    — {c.desc}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Workflow Diagram */}
+          <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+            <p className="text-xs font-medium text-muted-foreground mb-3">
+              Workflow Phases
+            </p>
+            <div className="flex items-center gap-1 text-xs overflow-x-auto pb-2">
+              {[
+                'ideating',
+                'specifying',
+                'decomposing',
+                'implementing',
+                'testing',
+                'committing',
+                'releasing',
+              ].map((phase, i) => (
+                <div key={phase} className="flex items-center shrink-0">
+                  <span
+                    className={`px-2 py-1 rounded font-medium ${
+                      phase === 'ideating' || phase === 'specifying'
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        : phase === 'testing'
+                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                          : phase === 'releasing'
+                            ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                            : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {phase}
+                  </span>
+                  {i < 6 && (
+                    <ArrowRight className="size-3 text-muted-foreground mx-1" />
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-500/50 mr-1" />
+              Human approval required
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-500/50 mx-1 ml-3" />
+              Self-correction enabled
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500/50 mx-1 ml-3" />
+              Release decision
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Button render={<Link href={featuredFeature.roadmapHref} />} nativeButton={false}>
+              <Play className="mr-2 size-4" />
+              Open Roadmap
+            </Button>
+            <Button
+              variant="outline"
+              render={
+                <a
+                  href={featuredFeature.guideHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+              nativeButton={false}
+            >
+              <BookOpen className="mr-2 size-4" />
+              Read Full Guide
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Main Sections */}
       <div className="grid gap-6 md:grid-cols-2">
         {systemSections.map((section) => (
@@ -222,18 +401,32 @@ export default function SystemPage() {
             developer-guides/
           </code>
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {developerGuides.map((guide) => (
             <a
               key={guide.href}
               href={guide.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-accent"
+              className={`group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-accent ${
+                'featured' in guide && guide.featured
+                  ? 'bg-primary/5 border-primary/20 hover:bg-primary/10'
+                  : 'bg-card'
+              }`}
             >
-              <guide.icon className="size-4 text-muted-foreground mt-0.5 shrink-0" />
+              <guide.icon
+                className={`size-4 mt-0.5 shrink-0 ${
+                  'featured' in guide && guide.featured
+                    ? 'text-primary'
+                    : 'text-muted-foreground'
+                }`}
+              />
               <div className="min-w-0">
-                <p className="font-medium text-sm group-hover:text-primary transition-colors">
+                <p
+                  className={`font-medium text-sm group-hover:text-primary transition-colors ${
+                    'featured' in guide && guide.featured ? 'text-primary' : ''
+                  }`}
+                >
                   {guide.title}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
