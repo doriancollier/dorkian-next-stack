@@ -10,13 +10,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Make roadmap page full-width layout
-
 ### Changed
 
 ### Fixed
 
-- Update harness docs and improve roadmap header styling
+---
+
+## [0.2.0-alpha.5] - 2026-02-01
+
+### Changed
+
+- Expand roadmap page to full-width layout for better use of screen space
+- Improve roadmap header styling with breadcrumb element and consistent typography
+
+### Fixed
+
+- Correct harness documentation (command counts, removed deleted commands)
+
 ---
 
 ## [0.2.0-alpha.4] - 2026-02-01
