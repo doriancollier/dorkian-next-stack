@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Update harness docs and improve roadmap header styling
 ---
 
 ## [0.2.0-alpha.4] - 2026-02-01

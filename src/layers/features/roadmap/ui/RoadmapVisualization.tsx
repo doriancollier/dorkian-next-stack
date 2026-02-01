@@ -58,28 +58,25 @@ export function RoadmapVisualization() {
   // Empty roadmap state
   if (items.length === 0) {
     return (
-      <div>
+      <main className="container-default py-8 space-y-8">
         <RoadmapHeader />
-        <main className="container-default py-8">
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">
-              No roadmap items yet. Use{' '}
-              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm">
-                /roadmap:add
-              </code>{' '}
-              to create one.
-            </p>
-          </div>
-        </main>
-      </div>
+        <div className="text-center py-16">
+          <p className="text-muted-foreground">
+            No roadmap items yet. Use{' '}
+            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm">
+              /roadmap:add
+            </code>{' '}
+            to create one.
+          </p>
+        </div>
+      </main>
     )
   }
 
   return (
-    <div>
-      <RoadmapHeader />
-
+    <>
       <main className="container-default py-8 space-y-8">
+        <RoadmapHeader />
         <HealthDashboard />
 
         <div className="flex flex-col gap-6">
@@ -126,6 +123,6 @@ export function RoadmapVisualization() {
         open={modalOpen}
         onOpenChange={handleModalOpenChange}
       />
-    </div>
+    </>
   )
 }
