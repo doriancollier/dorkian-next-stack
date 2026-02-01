@@ -105,6 +105,9 @@ python3 roadmap/scripts/find_by_title.py "<search-query>"
 
 # Generate slug from title
 python3 roadmap/scripts/slugify.py "<title>"
+
+# Clear all items and reset project metadata
+python3 roadmap/scripts/clear_roadmap.py "<project-name>" "<project-summary>"
 ```
 
 ## Schema Reference

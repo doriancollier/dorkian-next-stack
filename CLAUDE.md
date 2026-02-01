@@ -1136,6 +1136,7 @@ This parses the tasks.md file and creates any missing tasks in the task system.
 | `/roadmap:analyze` | Full health check and analysis |
 | `/roadmap:validate` | Validate roadmap JSON structure |
 | `/roadmap:enrich <item>` | Add ideationContext for richer prompts |
+| `/roadmap:clear` | Clear all roadmap items and reset project metadata |
 
 #### Review
 

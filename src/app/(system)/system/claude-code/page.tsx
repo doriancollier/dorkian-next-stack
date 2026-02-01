@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 
 const harnessStats = [
-  { label: 'Commands', value: '44', icon: Terminal },
+  { label: 'Commands', value: '45', icon: Terminal },
   { label: 'Agents', value: '7', icon: Bot },
   { label: 'Skills', value: '13', icon: Sparkles },
   { label: 'Rules', value: '5', icon: Shield },
@@ -51,7 +51,7 @@ const commandNamespaces = [
   {
     namespace: 'roadmap/',
     description: 'Product roadmap management',
-    commands: ['show', 'add', 'open', 'validate', 'analyze', 'prioritize', 'enrich'],
+    commands: ['show', 'add', 'open', 'validate', 'analyze', 'prioritize', 'enrich', 'clear'],
   },
   {
     namespace: 'system/',
