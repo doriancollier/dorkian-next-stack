@@ -10,11 +10,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Add parallel execution skill and documentation
-
 ### Changed
 
 ### Fixed
+
+---
+
+## [0.2.0-alpha.1] - 2026-02-01
+
+### Added
+
+- Add orchestrating-parallel-work skill for coordinating concurrent agents
+- Add developer guide on parallel execution patterns, anti-patterns, and troubleshooting
+- Integrate background agent execution with dependency-aware batch scheduling
 
 ---
 
