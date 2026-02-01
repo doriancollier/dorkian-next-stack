@@ -10,11 +10,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Add centralized site configuration system
-
 ### Changed
 
 ### Fixed
+
+---
+
+## [0.2.0-alpha.3] - 2026-02-01
+
+### Added
+
+- Add centralized site configuration system with feature toggles and env overrides
 
 ---
 
