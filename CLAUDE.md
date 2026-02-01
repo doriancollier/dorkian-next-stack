@@ -879,6 +879,39 @@ sips -s format jpeg -s formatOptions 80 in.png --out out.jpg  # Convert to JPEG
 
 See `.claude/skills/generating-images-replicate/SKILL.md` for complete documentation.
 
+## Release System
+
+| Command | Purpose |
+|---------|---------|
+| `/system:release` | Create a new release (version bump, changelog, tag, GitHub Release) |
+| `/system:release --dry-run` | Preview release without making changes |
+| `/changelog:backfill` | Populate [Unreleased] from commits since last tag |
+
+### Conventional Commits
+
+Use conventional commit format for automatic changelog population:
+
+| Prefix | Changelog Section |
+|--------|-------------------|
+| `feat:` | Added |
+| `fix:` | Fixed |
+| `docs:` | Changed |
+| `refactor:` | Changed |
+| `chore:` | (skipped) |
+
+### Git Hooks
+
+Install changelog populator hook:
+```bash
+.claude/scripts/install-git-hooks.sh
+```
+
+The hook auto-populates changelog from conventional commits on each commit.
+
+### Version File
+
+Version is stored in `VERSION` file (single line, e.g., `0.1.0-alpha.1`).
+
 ## Claude Code Customization
 
 ### Agents (use proactively for specialized tasks)
@@ -1057,10 +1090,18 @@ TaskUpdate({ taskId: "<task-id>", addBlockedBy: ["<blocking-task-id>"] })
 
 | Command | Purpose |
 |---------|---------|
+| `/system:release` | Create a new release (version bump, changelog, tag, GitHub Release) |
+| `/system:release --dry-run` | Preview release without making changes |
 | `/system:ask [question]` | Ask how to do something in this repository |
 | `/system:review [area]` | Review processes for clarity and improvements |
 | `/system:update [desc]` | Add, update, or improve system processes |
 | `/system:learn [topic]` | Learn new capabilities through experimentation, then codify |
+
+#### Changelog
+
+| Command | Purpose |
+|---------|---------|
+| `/changelog:backfill` | Populate [Unreleased] from commits since last tag |
 
 #### Roadmap
 
