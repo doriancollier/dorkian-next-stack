@@ -962,6 +962,9 @@ Version is stored in `VERSION` file (single line, e.g., `0.1.0-alpha.1`).
 | `vectorizing-images` | Raster-to-vector conversion — PNG/JPG to SVG using @neplex/vectorizer |
 | `managing-roadmap-moscow` | Roadmap work — MoSCoW prioritization, roadmap utilities |
 | `writing-developer-guides` | Creating/updating developer-guides/ — optimal structure for AI agents |
+| `orchestrating-parallel-work` | Parallel execution — coordinating concurrent agents, batch scheduling |
+| `changelog-writing` | Changelog entries — human-friendly release notes, Keep a Changelog format |
+| `posthog-nextjs-app-router` | PostHog analytics — integration for Next.js App Router |
 
 ### Path-Specific Rules
 
@@ -1253,6 +1256,17 @@ Phase 3: For each batch:
 
 **Context savings pattern:**
 Commands that read large files, perform analysis, or create many items benefit from background execution. The main context only sees: setup → spawn agent → receive summary. All intermediate work happens in isolated agent context.
+
+**Decision framework for parallel execution:**
+
+| Question | If Yes → | If No → |
+|----------|----------|---------|
+| Are tasks independent? | Consider parallel | Use sequential |
+| Will each task take >30 seconds? | Parallel worth overhead | Sequential may be faster |
+| Do agents need each other's output? | Batch by dependencies | Can be fully parallel |
+| Will agents edit the same files? | Must be sequential | Can be parallel |
+
+**Reference**: See `developer-guides/11-parallel-execution.md` for complete patterns, anti-patterns, and troubleshooting.
 
 ### Hooks (automatic validation)
 

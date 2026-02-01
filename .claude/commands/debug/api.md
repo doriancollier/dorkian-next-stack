@@ -127,7 +127,110 @@ Based on the feature, trace the data flow:
 4. **Find the DAL function** in `entities/*/api/`
 5. **Find the Prisma query** in the DAL function
 
-## Phase 3: Layer-by-Layer Debugging
+## Phase 3: Parallel Layer Investigation
+
+When the issue layer is unclear, launch parallel diagnostic agents to investigate multiple layers simultaneously.
+
+### 3.0 Launch Parallel Diagnostics (Optional)
+
+If user selected "Not sure" for problem layer, run diagnostics in parallel:
+
+```
+# Launch all diagnostic agents simultaneously
+component_agent = Task(
+  description: "Trace component data flow",
+  prompt: """
+    Investigate the frontend layer for the data issue.
+
+    1. Find React components displaying the affected data
+    2. Check how data is being fetched (useQuery, server action)
+    3. Look for rendering conditions that might hide data
+    4. Check error boundaries and loading states
+    5. Verify data shape matches expected interface
+
+    Return findings in this format:
+    ## Component Layer Findings
+    **Component**: [file path]
+    **Data Source**: [useQuery/server action/props]
+    **Issue Found**: [Yes/No]
+    **Details**: [explanation]
+    **Confidence**: [High/Medium/Low]
+  """,
+  subagent_type: "react-tanstack-expert",
+  run_in_background: true
+)
+
+action_agent = Task(
+  description: "Check server actions and API routes",
+  prompt: """
+    Investigate the server action/API layer for the data issue.
+
+    1. Find the server action or API route handling this data
+    2. Check for 'use server' directive and proper exports
+    3. Verify Zod validation passes
+    4. Check revalidatePath/revalidateTag calls
+    5. Look for error handling issues
+
+    Return findings in this format:
+    ## Server Action Layer Findings
+    **File**: [file path]
+    **Function**: [function name]
+    **Issue Found**: [Yes/No]
+    **Details**: [explanation]
+    **Confidence**: [High/Medium/Low]
+  """,
+  subagent_type: "general-purpose",
+  run_in_background: true
+)
+
+dal_agent = Task(
+  description: "Check DAL and database queries",
+  prompt: """
+    Investigate the DAL and database layer for the data issue.
+
+    1. Find the DAL function in entities/*/api/
+    2. Check auth (getCurrentUser/requireAuth)
+    3. Verify Prisma query is correct
+    4. Check include/select clauses
+    5. Look for proper error handling
+
+    Return findings in this format:
+    ## DAL Layer Findings
+    **File**: [file path]
+    **Function**: [function name]
+    **Issue Found**: [Yes/No]
+    **Details**: [explanation]
+    **Confidence**: [High/Medium/Low]
+  """,
+  subagent_type: "prisma-expert",
+  run_in_background: true
+)
+
+# Display progress
+print("🔍 Running parallel diagnostics across all layers...")
+print("   → Component layer investigation")
+print("   → Server action/API layer investigation")
+print("   → DAL/Database layer investigation")
+
+# Collect results
+component_result = TaskOutput(task_id: component_agent.id, block: true)
+print("   ✅ Component layer complete")
+
+action_result = TaskOutput(task_id: action_agent.id, block: true)
+print("   ✅ Server action layer complete")
+
+dal_result = TaskOutput(task_id: dal_agent.id, block: true)
+print("   ✅ DAL layer complete")
+
+# Synthesize findings
+print("\n📊 Diagnostic Summary:")
+# Present findings from each layer, highlight where issues were found
+```
+
+**Benefits**:
+- 3x faster than sequential investigation
+- Each agent uses specialized expertise
+- Parallel context usage instead of single overloaded context
 
 ### 3.1 Frontend Layer
 

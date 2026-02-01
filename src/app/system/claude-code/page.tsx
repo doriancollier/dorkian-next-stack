@@ -24,11 +24,11 @@ import {
 } from 'lucide-react'
 
 const harnessStats = [
-  { label: 'Commands', value: '43', icon: Terminal },
+  { label: 'Commands', value: '45', icon: Terminal },
   { label: 'Agents', value: '7', icon: Bot },
-  { label: 'Skills', value: '10', icon: Sparkles },
+  { label: 'Skills', value: '13', icon: Sparkles },
   { label: 'Rules', value: '5', icon: Shield },
-  { label: 'Hooks', value: '9', icon: Zap },
+  { label: 'Hooks', value: '8', icon: Zap },
   { label: 'MCP Servers', value: '5', icon: Settings },
 ]
 
@@ -173,6 +173,21 @@ const skills = [
     name: 'writing-developer-guides',
     description: 'Developer guide structure for AI agents',
     trigger: 'Creating/updating guides',
+  },
+  {
+    name: 'orchestrating-parallel-work',
+    description: 'Parallel agent execution, batch scheduling',
+    trigger: 'Coordinating concurrent tasks',
+  },
+  {
+    name: 'changelog-writing',
+    description: 'Human-friendly changelog entries, release notes',
+    trigger: 'Populating changelog, preparing releases',
+  },
+  {
+    name: 'posthog-nextjs-app-router',
+    description: 'PostHog analytics integration for Next.js',
+    trigger: 'Adding analytics to App Router',
   },
 ]
 

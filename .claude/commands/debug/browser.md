@@ -116,6 +116,142 @@ Based on gathered data, classify the issue:
 
 ## Phase 3: Deep Diagnosis
 
+### 3.0 Parallel Diagnostic Agents (Optional)
+
+When the issue is complex or unclear, launch parallel diagnostic agents:
+
+```
+# Launch all diagnostic agents simultaneously
+visual_agent = Task(
+  description: "Audit visual/design system compliance",
+  prompt: """
+    Conduct a systematic design system audit for the affected area.
+
+    Check against the Calm Tech design system:
+    1. Typography: Geist Sans/Mono, correct sizes (11/13/15/17/20/24/30/36/48px)
+    2. Spacing: 8px base (4/8/12/16/20/24/32/48/64px)
+    3. Colors: No pure black/white, semantic tokens used
+    4. Shapes: Cards rounded-xl (16px), buttons rounded-md (10px)
+    5. Shadows: Using project shadows (shadow-soft, shadow-elevated)
+    6. Animation: 100-300ms duration, correct easing
+
+    Return findings in this format:
+    ## Visual Audit Findings
+    **Area Audited**: [description]
+    **Violations Found**: [count]
+    **Details**:
+    - [violation 1]
+    - [violation 2]
+    **Severity**: [High/Medium/Low]
+  """,
+  subagent_type: "general-purpose",
+  run_in_background: true
+)
+
+console_agent = Task(
+  description: "Analyze console errors and warnings",
+  prompt: """
+    Analyze browser console for errors related to the issue.
+
+    1. Review all console errors from the page
+    2. Check for React warnings (key props, deprecated lifecycle)
+    3. Look for uncaught exceptions
+    4. Check for network-related console messages
+    5. Identify the source component/file for each error
+
+    Return findings in this format:
+    ## Console Analysis Findings
+    **Total Errors**: [count]
+    **Critical Errors**:
+    - [error message] → [source file]
+    **Warnings**: [count]
+    **Likely Root Cause**: [explanation]
+  """,
+  subagent_type: "typescript-expert",
+  run_in_background: true
+)
+
+network_agent = Task(
+  description: "Analyze network requests and responses",
+  prompt: """
+    Analyze network activity for issues.
+
+    1. Check for failed requests (4xx, 5xx status codes)
+    2. Look for slow requests (>2 seconds)
+    3. Verify response shapes match expected
+    4. Check for CORS issues
+    5. Look for missing requests that should be made
+
+    Return findings in this format:
+    ## Network Analysis Findings
+    **Failed Requests**: [count]
+    **Details**:
+    - [URL] → [status] [error]
+    **Slow Requests**: [count]
+    **Missing Requests**: [any expected but not made]
+    **Likely Issue**: [explanation]
+  """,
+  subagent_type: "general-purpose",
+  run_in_background: true
+)
+
+accessibility_agent = Task(
+  description: "Check accessibility issues",
+  prompt: """
+    Check for accessibility issues in the affected area.
+
+    1. Check for missing alt text on images
+    2. Verify form labels are associated with inputs
+    3. Check color contrast (WCAG AA: 4.5:1)
+    4. Verify focus states are visible
+    5. Check for keyboard navigation issues
+    6. Verify ARIA attributes are correct
+
+    Return findings in this format:
+    ## Accessibility Findings
+    **Issues Found**: [count]
+    **Critical**:
+    - [issue description]
+    **Warnings**:
+    - [issue description]
+    **Recommendations**: [list]
+  """,
+  subagent_type: "general-purpose",
+  run_in_background: true
+)
+
+# Display progress
+print("🔍 Running parallel browser diagnostics...")
+print("   → Visual/design system audit")
+print("   → Console error analysis")
+print("   → Network request analysis")
+print("   → Accessibility check")
+
+# Collect results
+visual_result = TaskOutput(task_id: visual_agent.id, block: true)
+print("   ✅ Visual audit complete")
+
+console_result = TaskOutput(task_id: console_agent.id, block: true)
+print("   ✅ Console analysis complete")
+
+network_result = TaskOutput(task_id: network_agent.id, block: true)
+print("   ✅ Network analysis complete")
+
+accessibility_result = TaskOutput(task_id: accessibility_agent.id, block: true)
+print("   ✅ Accessibility check complete")
+
+# Synthesize findings
+print("\n📊 Diagnostic Summary:")
+# Present combined findings, prioritize by severity
+```
+
+**Benefits**:
+- 4x faster than sequential checks
+- Each agent specializes in its domain
+- Comprehensive coverage without context overload
+
+---
+
 ### For Visual Issues
 
 **Invoke the `designing-frontend` skill:**

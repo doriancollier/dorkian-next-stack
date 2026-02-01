@@ -19,13 +19,13 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Commands | 43 | `.claude/commands/` |
+| Commands | 45 | `.claude/commands/` |
 | Agents | 7 | `.claude/agents/` |
-| Skills | 10 | `.claude/skills/` |
+| Skills | 13 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
 | Hooks | 8 | `.claude/settings.json` |
 | MCP Servers | 5 | `.mcp.json` |
-| Developer Guides | 10 + INDEX | `developer-guides/` |
+| Developer Guides | 11 + INDEX | `developer-guides/` |
 
 ## Component Types
 
@@ -93,6 +93,9 @@ Skills provide reusable expertise that Claude applies automatically when relevan
 | `vectorizing-images` | Raster-to-vector conversion with @neplex/vectorizer | Converting PNG/JPG to SVG, logo production |
 | `managing-roadmap-moscow` | MoSCoW prioritization, roadmap utilities | Product planning, prioritization decisions |
 | `writing-developer-guides` | Developer guide structure for AI agents | Creating/updating files in developer-guides/ |
+| `orchestrating-parallel-work` | Parallel agent execution, batch scheduling | Coordinating multiple concurrent tasks, optimizing task ordering |
+| `changelog-writing` | Human-friendly changelog entries, release notes | Populating changelog, preparing releases |
+| `posthog-nextjs-app-router` | PostHog analytics integration | Adding analytics to Next.js App Router |
 
 ### Rules (Path-Triggered)
 
@@ -146,6 +149,7 @@ Detailed implementation patterns in `developer-guides/`:
 | `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
 | `09-authentication.md` | BetterAuth, sessions, OTP patterns |
 | `10-metadata-seo.md` | Metadata API, favicons, Open Graph, SEO, AEO |
+| `11-parallel-execution.md` | Parallel agent execution patterns, batching, context savings |
 
 Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
 
@@ -241,7 +245,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── product-manager.md
 │   └── research-expert.md
 │
-├── skills/                # Reusable expertise (10 total)
+├── skills/                # Reusable expertise (13 total)
 │   ├── proactive-clarification/
 │   ├── debugging-systematically/
 │   ├── designing-frontend/
@@ -251,7 +255,8 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── generating-images-replicate/
 │   ├── vectorizing-images/
 │   ├── managing-roadmap-moscow/
-│   └── writing-developer-guides/
+│   ├── writing-developer-guides/
+│   └── orchestrating-parallel-work/
 │
 └── rules/                 # Path-specific guidance (5 total)
     ├── api.md             # API route handlers
@@ -306,6 +311,42 @@ Project-wide documentation? ─────────────► CLAUDE.md
 /system:review [area]          # Audit for consistency
 /system:learn [topic]          # Learn through experimentation, then codify
 ```
+
+## Parallel Execution
+
+Several commands use parallel background agents for efficiency. This pattern provides 3-6x speedup and 80-90% context savings.
+
+### Commands with Parallel Execution
+
+| Command | Pattern | Agents |
+|---------|---------|--------|
+| `/ideate` | Parallel research | `Explore` + `research-expert` run simultaneously |
+| `/spec:execute` | Dependency-aware batching | Tasks grouped by dependencies, each batch runs in parallel |
+| `/spec:decompose` | Analysis isolation | Heavy decomposition runs in background agent |
+| `/debug:api` | Parallel diagnostics | Component, action, DAL agents investigate simultaneously |
+| `/debug:browser` | Parallel diagnostics | Visual, console, network, accessibility checks in parallel |
+
+### How It Works
+
+1. **Background agents** run via `Task(..., run_in_background: true)`
+2. **Task IDs** are stored to collect results later
+3. **TaskOutput** waits for completion: `TaskOutput(task_id, block: true)`
+4. **Results synthesized** in main context
+
+### When Parallel Helps
+
+- Multiple independent analysis tasks (research, diagnostics)
+- Heavy computation that doesn't need user interaction
+- Batch operations with dependency graphs
+- Multiple expert perspectives on the same problem
+
+### Monitoring
+
+Use `/tasks` to see running background agents and their status.
+
+### Reference
+
+See `developer-guides/11-parallel-execution.md` for complete patterns and decision framework.
 
 ## Maintaining the Harness
 

@@ -20,6 +20,7 @@ This file maps code areas to their relevant developer guides. It serves three pu
 | [08-styling-theming.md](./08-styling-theming.md) | Tailwind v4, Shadcn UI, theming | `src/app/globals.css`, `src/layers/shared/ui/**`, `src/components/ui/**`, `tailwind.config.*` |
 | [09-authentication.md](./09-authentication.md) | BetterAuth, sessions, OTP, auth utilities | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/layers/shared/api/auth.ts`, `src/app/(auth)/**`, `src/app/api/auth/**` |
 | [10-metadata-seo.md](./10-metadata-seo.md) | Metadata API, favicons, Open Graph, JSON-LD, SEO, AEO | `src/app/**/layout.tsx`, `src/app/**/page.tsx`, `src/app/sitemap.ts`, `src/app/robots.ts`, `src/app/**/opengraph-image.tsx`, `public/manifest.webmanifest` |
+| [11-parallel-execution.md](./11-parallel-execution.md) | Parallel agent execution, background agents, batch scheduling | `.claude/commands/**`, `.claude/skills/**`, `Task(`, `TaskOutput(` |
 
 ## Pattern Matching Reference
 
@@ -179,6 +180,20 @@ keywords:
   - "JSON-LD"
   - "structured data"
   - "schema.org"
+
+# Guide: 11-parallel-execution.md
+patterns:
+  - ".claude/commands/**"
+  - ".claude/skills/**"
+keywords:
+  - "Task("
+  - "TaskOutput("
+  - "run_in_background"
+  - "parallel"
+  - "background agent"
+  - "batch"
+  - "concurrent"
+  - "dependency"
 ```
 
 ## Maintenance Tracking
@@ -195,6 +210,7 @@ keywords:
 | 08-styling-theming.md | 2025-12-22 | Claude | Restructured: AI-optimized format (Decision Matrix, Anti-Patterns, Troubleshooting) |
 | 09-authentication.md | 2025-12-22 | Claude | Created with AI-optimized format (already follows template) |
 | 10-metadata-seo.md | 2025-12-23 | Claude | Created: Covers Metadata API, favicons, OG, JSON-LD, SEO, AEO with Next.js-specific patterns |
+| 11-parallel-execution.md | 2026-02-01 | Claude | Created: Parallel agent patterns, background agents, batch scheduling, context savings |
 
 ## How to Use This Index
 
