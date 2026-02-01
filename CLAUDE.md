@@ -1048,6 +1048,7 @@ paths: src/app/api/**/*.ts
 | `/spec:feedback <path>` | Process post-implementation feedback |
 | `/spec:doc-update <path>` | Review docs for updates after spec |
 | `/spec:migrate` | Migrate existing specs to feature directories |
+| `/spec:tasks-sync` | Sync tasks from 03-tasks.md to the built-in task system |
 
 **Task Management Convention**
 
@@ -1089,6 +1090,22 @@ TaskUpdate({ taskId: "<task-id>", status: "completed" })
 TaskUpdate({ taskId: "<task-id>", addBlockedBy: ["<blocking-task-id>"] })
 ```
 
+**Task Creation Verification:**
+
+After `/spec:decompose`, verify tasks were created:
+```
+tasks = TaskList()
+feature_tasks = tasks.filter(t => t.subject.includes("[<slug>]"))
+# Should match the count from decompose summary
+```
+
+If tasks are missing but `03-tasks.md` exists (decompose created the file but TaskCreate failed):
+```
+/spec:tasks-sync specs/<slug>/03-tasks.md
+```
+
+This parses the tasks.md file and creates any missing tasks in the task system.
+
 #### System
 
 | Command | Purpose |
@@ -1110,10 +1127,8 @@ TaskUpdate({ taskId: "<task-id>", addBlockedBy: ["<blocking-task-id>"] })
 
 | Command | Purpose |
 |---------|---------|
-| `/roadmap:show` | Display roadmap summary |
-| `/roadmap:open` | Start server and open visualization in browser |
-| `/roadmap:close` | Stop the visualization server |
-| `/roadmap:status` | Check if visualization server is running |
+| `/roadmap:show` | Display roadmap summary in terminal (CLI-only, no browser) |
+| `/roadmap:open` | Open roadmap visualization at localhost:3000/roadmap |
 | `/roadmap:add <title>` | Add a new roadmap item |
 | `/roadmap:prioritize` | Get prioritization suggestions |
 | `/roadmap:analyze` | Full health check and analysis |
@@ -1162,12 +1177,11 @@ The roadmap system integrates with the spec workflow for seamless transitions fr
 #### Workflow: Roadmap Item → Implementation
 
 ```
-1. /roadmap:open           # Start server and open HTML visualization
+1. /roadmap:open           # Open roadmap at localhost:3000/roadmap
 2. Click "Start Ideation"  # Copies /ideate --roadmap-id <uuid> command
 3. Paste in terminal       # Status → in-progress, creates spec
 4. /ideate-to-spec         # Transform to specification
 5. /spec:execute           # Implement; status → completed on finish
-6. /roadmap:close          # Stop the server when done
 ```
 
 #### Key Commands with Roadmap Integration

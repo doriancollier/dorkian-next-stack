@@ -394,6 +394,50 @@ import { listUsers } from '@/layers/entities/user'  // ✅
 const users = await listUsers()
 ```
 
+## Roadmap Feature
+
+The roadmap visualization lives at `/roadmap` and is implemented as a feature in the FSD architecture:
+
+```
+src/layers/features/roadmap/
+├── ui/                              # React components
+│   ├── RoadmapVisualization.tsx     # Main client component
+│   ├── TimelineView.tsx             # Now/Next/Later kanban
+│   ├── StatusView.tsx               # Status-based kanban
+│   ├── PriorityView.tsx             # MoSCoW grouped list
+│   ├── RoadmapCard.tsx              # Item card
+│   ├── RoadmapModal.tsx             # Item detail modal
+│   ├── RoadmapFilterPanel.tsx       # Filter controls
+│   ├── ViewToggle.tsx               # View mode selector
+│   ├── HealthDashboard.tsx          # Metrics display
+│   └── RoadmapHeader.tsx            # Project header
+├── model/
+│   ├── types.ts                     # Zod schemas, TypeScript types
+│   └── constants.ts                 # Labels, colors, formatters
+├── lib/
+│   └── use-roadmap-filters.ts       # URL state persistence hook
+└── index.ts                         # Public exports
+```
+
+**Data source**: `roadmap/roadmap.json` (managed by Python scripts, bundled at build time)
+
+**Data flow**:
+1. Python CLI scripts write to `roadmap/roadmap.json`
+2. `roadmap/roadmap.ts` imports JSON with TypeScript types
+3. Next.js Server Component imports the typed data at build time
+4. React components render the visualization
+5. Changes require: edit JSON → commit → deploy
+
+**Key files**:
+- `roadmap/roadmap.ts` - TypeScript wrapper that imports JSON with types
+- `src/app/(public)/roadmap/page.tsx` - Route handler (static, prerendered)
+- `src/layers/features/roadmap/ui/RoadmapVisualization.tsx` - Main client component
+
+**Python scripts** (unchanged, work with the JSON file):
+- `roadmap/scripts/update_status.py` - Change item status
+- `roadmap/scripts/link_spec.py` - Link spec files to items
+- `roadmap/scripts/find_by_title.py` - Search items by title
+
 ## References
 
 - [Feature-Sliced Design Documentation](https://feature-sliced.design/) - Official FSD methodology

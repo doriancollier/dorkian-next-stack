@@ -7,7 +7,7 @@ category: roadmap
 
 # Roadmap Open
 
-Start a local HTTP server and open the roadmap visualization in your default browser.
+Open the roadmap visualization in your default browser. The roadmap is now integrated into the Next.js application.
 
 ## Usage
 
@@ -17,76 +17,46 @@ Start a local HTTP server and open the roadmap visualization in your default bro
 
 ## Implementation
 
-### Step 1: Check if Server Already Running
-
-Check if a server is already running by reading the PID file:
+### Step 1: Check if Dev Server is Running
 
 ```bash
-PID_FILE="roadmap/.server.pid"
-
-if [ -f "$PID_FILE" ]; then
-  PID=$(cat "$PID_FILE")
-  if ps -p $PID > /dev/null 2>&1; then
-    # Server already running, get port from file
-    PORT_FILE="roadmap/.server.port"
-    PORT=$(cat "$PORT_FILE" 2>/dev/null || echo "8765")
-    echo "Roadmap server already running at http://localhost:$PORT/roadmap.html (PID: $PID)"
-    open "http://localhost:$PORT/roadmap.html"
-    exit 0
-  fi
+if lsof -i :3000 > /dev/null 2>&1; then
+  echo "Dev server detected on port 3000"
+else
+  echo "Warning: Dev server may not be running on port 3000"
+  echo "Start it with: pnpm dev"
+  echo ""
 fi
 ```
 
-### Step 2: Find Available Port
+### Step 2: Open Browser
 
 ```bash
-PORT=8765
-for p in 8765 8766 8767 8768 8769 8770; do
-  if ! lsof -i :$p > /dev/null 2>&1; then
-    PORT=$p
-    break
-  fi
-done
+open "http://localhost:3000/roadmap"
 ```
 
-### Step 3: Start HTTP Server
+### Step 3: Report to User
 
 ```bash
-cd roadmap
-python3 -m http.server $PORT &
-SERVER_PID=$!
-cd ..
-
-# Wait for server to start
-sleep 1
-
-# Save PID and port for later
-echo $SERVER_PID > roadmap/.server.pid
-echo $PORT > roadmap/.server.port
-```
-
-### Step 4: Open Browser
-
-```bash
-open "http://localhost:$PORT/roadmap.html"
-```
-
-### Step 5: Report to User
-
-```bash
+echo "Opening roadmap at http://localhost:3000/roadmap"
 echo ""
-echo "Roadmap server started at http://localhost:$PORT/roadmap.html"
-echo "Server PID: $SERVER_PID"
+echo "Features available:"
+echo "  - Timeline View (Now/Next/Later)"
+echo "  - Status View (by status)"
+echo "  - Priority View (MoSCoW groups)"
+echo "  - Health Dashboard"
+echo "  - Filtering by type, priority, status"
+echo "  - Item detail modals"
 echo ""
-echo "To stop the server, run: /roadmap:close"
-echo "To check status, run: /roadmap:status"
+echo "Related commands:"
+echo "  /roadmap:show      - CLI text summary (no browser needed)"
+echo "  /roadmap:add       - Add a new item"
+echo "  /roadmap:validate  - Validate roadmap.json"
 ```
 
 ## Notes
 
-- The server runs in the background until stopped with `/roadmap:close`
-- Uses Python's built-in HTTP server (no dependencies)
-- Works on macOS (uses `open` command)
-- Port auto-selects if default (8765) is in use
-- PID stored in `roadmap/.server.pid` for clean shutdown
-- Idempotent: if server already running, just opens browser
+- Requires the Next.js dev server to be running (`pnpm dev`)
+- The roadmap is served from `/roadmap` route in the Next.js app
+- For production, the roadmap is statically rendered at build time
+- Python scripts still work for CLI management (`/roadmap:add`, `/roadmap:validate`, etc.)

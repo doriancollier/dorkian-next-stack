@@ -16,7 +16,8 @@ This command uses a **background agent** to perform the heavy decomposition work
 **Flow:**
 1. Main context: Extract slug, detect mode, spawn background agent
 2. Background agent: Read spec, analyze, create tasks, write breakdown
-3. Main context: Report results when complete
+3. Main context: Wait for results
+4. Main context: Validate task creation, auto-recover if needed, report results
 
 ## Phase 1: Setup (Main Context)
 
@@ -97,7 +98,79 @@ If user chooses to wait, use:
 TaskOutput(task_id: "<agent-task-id>", block: true)
 ```
 
-Then report the summary from the background agent's output.
+Then proceed to Phase 4.
+
+## Phase 4: Validate Task Creation (Main Context)
+
+After receiving results from the background agent, validate that tasks were actually created.
+
+### 4.1 Check Task Creation Status
+
+Parse the background agent's summary for the "Task Creation Status" section:
+- If status is `SUCCESS` and counts match → proceed to reporting
+- If status is `TASK_CREATION_INCOMPLETE` → attempt auto-recovery
+
+### 4.2 Verify Tasks Exist
+
+Independently verify using TaskList:
+
+```
+all_tasks = TaskList()
+feature_tasks = all_tasks.filter(t => t.subject.includes("[<slug>]"))
+actual_count = feature_tasks.length
+```
+
+Compare against the "Tasks in Breakdown" count from the summary.
+
+### 4.3 Auto-Recovery (If Needed)
+
+If `actual_count < expected_count`:
+
+1. **Read the generated tasks file**: `specs/[slug]/03-tasks.md`
+2. **Parse task definitions** from the markdown (look for `### Task X.Y:` headers)
+3. **Identify missing tasks** by comparing subjects against existing tasks
+4. **Create missing tasks** using TaskCreate with content from the tasks.md file
+5. **Set up dependencies** using TaskUpdate
+
+Display during recovery:
+```
+⚠️ Task creation incomplete. Auto-recovering...
+   Expected: [X] tasks
+   Found: [Y] tasks
+   Creating [X-Y] missing tasks from tasks.md...
+```
+
+After recovery:
+```
+✅ Recovery complete
+   Tasks now registered: [new count]
+```
+
+### 4.4 Handle Recovery Failure
+
+If auto-recovery fails (can't parse tasks.md or TaskCreate keeps failing):
+
+```
+⚠️ Task Creation Issue
+
+The task breakdown was saved to specs/[slug]/03-tasks.md
+but some tasks could not be registered in the task system.
+
+Expected: [X] tasks | Created: [Y] tasks
+
+Options:
+1. **Retry** - Run `/spec:decompose` again
+2. **Manual sync** - Run `/spec:tasks-sync specs/[slug]/03-tasks.md`
+3. **Continue anyway** - Use `/spec:execute` (will work with available tasks)
+```
+
+### 4.5 Report Results
+
+Display the final summary to the user:
+- Task creation status (success/recovered/incomplete)
+- Task counts by phase
+- Parallel execution opportunities
+- Next steps
 
 ---
 
@@ -123,6 +196,21 @@ Break down the specification into:
 3. Testing and validation requirements
 4. Documentation needs
 
+## ⚠️ CRITICAL: TaskCreate is MANDATORY
+
+**Task creation via TaskCreate is NOT optional.** The decomposition is considered FAILED if tasks are not created in the task system.
+
+You MUST:
+1. **Create ALL tasks using TaskCreate** — Every task in your breakdown must be registered
+2. **Set up ALL dependencies using TaskUpdate** — Required for `/spec:execute` to work
+3. **Verify creation succeeded** — Call `TaskList()` at the end to confirm tasks exist
+4. **Report creation status** — Include task count verification in your summary
+
+**If TaskCreate fails:**
+- Retry the call once
+- If still failing, continue with remaining tasks
+- Report failures in your summary with `TASK_CREATION_INCOMPLETE` status
+
 ## ⚠️ CRITICAL: Content Preservation Requirements
 
 **THIS IS THE MOST IMPORTANT PART**: When creating tasks, you MUST copy ALL content from the task breakdown into the task descriptions. Do NOT summarize or reference the spec - include the ACTUAL CODE and details.
@@ -134,6 +222,8 @@ Before creating any tasks, confirm your understanding:
 - [ ] I will COPY all code blocks from the task breakdown into task descriptions
 - [ ] I will INCLUDE complete implementations, not references
 - [ ] Each task will be self-contained with ALL details from the breakdown
+- [ ] I will call TaskCreate for EVERY task in my breakdown
+- [ ] I will verify tasks were created using TaskList() before finishing
 
 **If you find yourself typing phrases like "as specified", "from spec", or "see specification" - STOP and copy the actual content instead!**
 
@@ -312,7 +402,20 @@ TaskUpdate({
 - Save the detailed task breakdown document to `specs/[SLUG]/03-tasks.md`
 - Ensure "Last Decompose: [Today's Date]" is included for future incremental detection
 
-### Step 7: Return Summary
+### Step 7: Verify Task Creation
+
+**Before returning, verify tasks were created:**
+
+```
+# Get all tasks and filter for this feature
+all_tasks = TaskList()
+feature_tasks = all_tasks.filter(t => t.subject.includes("[SLUG]"))
+created_count = feature_tasks.length
+```
+
+Compare `created_count` against the number of tasks in your breakdown.
+
+### Step 8: Return Summary
 
 **IMPORTANT**: Return a structured summary for the main conversation:
 
@@ -322,6 +425,13 @@ TaskUpdate({
 **Spec**: [spec-path]
 **Mode**: [Full/Incremental]
 **Tasks File**: specs/[SLUG]/03-tasks.md
+
+### Task Creation Status
+- **Status**: [SUCCESS / TASK_CREATION_INCOMPLETE]
+- **Tasks in Breakdown**: [count]
+- **Tasks Created**: [count from TaskList verification]
+- **Dependencies Set**: [count]
+- **Creation Failures**: [list task numbers that failed, or "None"]
 
 ### Task Summary
 - **Total Tasks**: [count]
@@ -431,6 +541,39 @@ If the background agent takes too long:
 1. Use `/tasks` to check status
 2. Use `TaskOutput(task_id, block: false)` to check progress
 3. Large specs may take several minutes - this is normal
+
+### Tasks Not Created (tasks.md exists but TaskList is empty)
+
+**Symptom**: `03-tasks.md` file was created but `TaskList()` returns no matching tasks
+
+**Cause**: Background agent wrote the document but TaskCreate calls failed or weren't executed
+
+**Solutions**:
+1. **Auto-recovery** should trigger automatically in Phase 4
+2. **Manual sync**: Run `/spec:tasks-sync specs/[slug]/03-tasks.md`
+3. **Re-run decompose**: Delete `03-tasks.md` and run `/spec:decompose` again
+
+### Partial Task Creation
+
+**Symptom**: Some tasks created, but fewer than expected
+
+**Cause**: Background agent may have hit context limits or TaskCreate failed for some tasks
+
+**Solutions**:
+1. Phase 4 auto-recovery will attempt to create missing tasks
+2. Check `03-tasks.md` for the complete breakdown
+3. Use `/spec:tasks-sync` to sync remaining tasks
+
+### TaskCreate Returning Errors
+
+**Symptom**: Background agent reports TaskCreate failures
+
+**Possible causes**:
+- Task description too long (try splitting into smaller tasks)
+- Invalid characters in subject
+- System resource limits
+
+**Solution**: Use `/spec:tasks-sync` which includes retry logic and error handling
 
 ### Context Benefits
 

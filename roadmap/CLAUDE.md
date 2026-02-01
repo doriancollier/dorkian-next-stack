@@ -66,24 +66,21 @@ The visualization uses vanilla JS with an IIFE pattern. Do NOT:
 ### Viewing
 
 ```bash
-# Open in browser (starts HTTP server)
+# Open in browser (Next.js app - requires dev server running)
 /roadmap:open
+# Opens http://localhost:3000/roadmap
 
-# Check server status
-/roadmap:status
-
-# Stop the server
-/roadmap:close
-
-# Or manually:
-cd roadmap && python3 -m http.server 8765
-open http://localhost:8765/roadmap.html
+# CLI text summary (no browser needed)
+/roadmap:show
 ```
+
+**Note:** The roadmap visualization is now integrated into the Next.js app at `/roadmap`. The standalone HTML visualization (`roadmap.html`) is deprecated but kept for reference.
 
 ### Management (via Claude Code)
 
 ```bash
-/roadmap:show           # Display summary
+/roadmap:show           # Display CLI summary (no browser)
+/roadmap:open           # Open in browser (Next.js app)
 /roadmap:add "title"    # Add new item (interactive)
 /roadmap:enrich <id>    # Add ideationContext
 /roadmap:prioritize     # Get prioritization suggestions
@@ -192,10 +189,8 @@ The `managing-roadmap-moscow` skill (`.claude/skills/managing-roadmap-moscow/`) 
 
 ### With Claude Code Commands
 
-- `/roadmap:show` - Display summary
-- `/roadmap:open` - Start server and open visualization
-- `/roadmap:close` - Stop the server
-- `/roadmap:status` - Check if server is running
+- `/roadmap:show` - Display CLI summary (no browser)
+- `/roadmap:open` - Open visualization at localhost:3000/roadmap
 - `/roadmap:add` - Add new roadmap item
 - `/roadmap:enrich` - Add ideationContext to item
 - `/roadmap:prioritize` - Get priority suggestions
