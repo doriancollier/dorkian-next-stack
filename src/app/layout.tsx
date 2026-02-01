@@ -3,11 +3,26 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Providers } from './providers'
 import { CookieConsentBanner } from '@/layers/widgets/cookie-consent'
+import { getSiteConfig } from '@/config'
 import './globals.css'
 
-export const metadata: Metadata = {
-  title: 'Next.js Boilerplate',
-  description: 'A production-ready Next.js 16 boilerplate with modern tooling',
+export async function generateMetadata(): Promise<Metadata> {
+  const config = getSiteConfig()
+  return {
+    title: {
+      default: config.name,
+      template: `%s | ${config.name}`,
+    },
+    description: config.description,
+    metadataBase: new URL(config.url),
+    openGraph: {
+      siteName: config.name,
+      images: config.seo.ogImage ? [config.seo.ogImage] : undefined,
+    },
+    twitter: config.seo.twitterCard
+      ? { card: config.seo.twitterCard }
+      : undefined,
+  }
 }
 
 export const viewport: Viewport = {

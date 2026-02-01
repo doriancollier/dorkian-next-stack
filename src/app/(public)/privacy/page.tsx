@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getSiteConfig } from '@/config'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -6,6 +7,8 @@ export const metadata: Metadata = {
 }
 
 export default function PrivacyPolicyPage() {
+  const config = getSiteConfig()
+
   return (
     <div className="container-narrow py-12">
       <article className="space-y-8">
@@ -19,7 +22,7 @@ export default function PrivacyPolicyPage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Introduction</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Your Company (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your privacy.
+            {config.name} (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your privacy.
             This Privacy Policy explains how we collect, use, disclose, and safeguard your information
             when you use our service.
           </p>
@@ -132,8 +135,8 @@ export default function PrivacyPolicyPage() {
           </p>
           <p className="text-muted-foreground">
             Email:{' '}
-            <a href="mailto:privacy@yourcompany.com" className="text-primary hover:underline">
-              privacy@yourcompany.com
+            <a href={`mailto:${config.contact.privacyEmail ?? 'privacy@example.com'}`} className="text-primary hover:underline">
+              {config.contact.privacyEmail ?? 'privacy@example.com'}
             </a>
           </p>
         </section>

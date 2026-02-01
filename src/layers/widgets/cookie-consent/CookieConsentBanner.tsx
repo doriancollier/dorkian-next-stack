@@ -6,6 +6,7 @@ import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getSiteConfig } from '@/config'
 
 const COOKIE_CONSENT_KEY = 'cookie-consent'
 const CONSENT_EXPIRY_DAYS = 365
@@ -38,7 +39,13 @@ export function CookieConsentBanner() {
   const [isVisible, setIsVisible] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
 
+  // Check if cookie banner is enabled in config
+  const config = getSiteConfig()
+
   useEffect(() => {
+    // If cookie banner is disabled, don't show it
+    if (!config.features.cookieBanner) return
+
     // Check if user has already made a choice
     const consent = getStoredConsent()
     if (consent === null) {
@@ -46,7 +53,10 @@ export function CookieConsentBanner() {
       const timer = setTimeout(() => setIsVisible(true), 500)
       return () => clearTimeout(timer)
     }
-  }, [])
+  }, [config.features.cookieBanner])
+
+  // Early return if banner is disabled via config
+  if (!config.features.cookieBanner) return null
 
   const handleClose = (accepted: boolean) => {
     setIsClosing(true)

@@ -21,6 +21,7 @@ This file maps code areas to their relevant developer guides. It serves three pu
 | [09-authentication.md](./09-authentication.md) | BetterAuth, sessions, OTP, auth utilities | `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/layers/shared/api/auth.ts`, `src/app/(auth)/**`, `src/app/api/auth/**` |
 | [10-metadata-seo.md](./10-metadata-seo.md) | Metadata API, favicons, Open Graph, JSON-LD, SEO, AEO | `src/app/**/layout.tsx`, `src/app/**/page.tsx`, `src/app/sitemap.ts`, `src/app/robots.ts`, `src/app/**/opengraph-image.tsx`, `public/manifest.webmanifest` |
 | [11-parallel-execution.md](./11-parallel-execution.md) | Parallel agent execution, background agents, batch scheduling | `.claude/commands/**`, `.claude/skills/**`, `Task(`, `TaskOutput(` |
+| [12-site-configuration.md](./12-site-configuration.md) | Site configuration, feature toggles, env overrides | `site.config.ts`, `src/config/**` |
 
 ## Pattern Matching Reference
 
@@ -194,6 +195,19 @@ keywords:
   - "batch"
   - "concurrent"
   - "dependency"
+
+# Guide: 12-site-configuration.md
+patterns:
+  - "site.config.ts"
+  - "src/config/**"
+keywords:
+  - "siteConfig"
+  - "getSiteConfig"
+  - "SiteConfig"
+  - "cookieBanner"
+  - "legalPages"
+  - "site configuration"
+  - "feature toggle"
 ```
 
 ## Maintenance Tracking
@@ -211,6 +225,7 @@ keywords:
 | 09-authentication.md | 2025-12-22 | Claude | Created with AI-optimized format (already follows template) |
 | 10-metadata-seo.md | 2025-12-23 | Claude | Created: Covers Metadata API, favicons, OG, JSON-LD, SEO, AEO with Next.js-specific patterns |
 | 11-parallel-execution.md | 2026-02-01 | Claude | Created: Parallel agent patterns, background agents, batch scheduling, context savings |
+| 12-site-configuration.md | 2026-02-01 | Claude | Created: Site configuration system, feature toggles, env overrides |
 
 ## How to Use This Index
 

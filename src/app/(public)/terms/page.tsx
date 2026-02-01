@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { getSiteConfig } from '@/config'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -7,6 +8,8 @@ export const metadata: Metadata = {
 }
 
 export default function TermsOfServicePage() {
+  const config = getSiteConfig()
+
   return (
     <div className="container-narrow py-12">
       <article className="space-y-8">
@@ -28,7 +31,7 @@ export default function TermsOfServicePage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Description of Service</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Your Company provides a web-based platform that allows users to [describe your service].
+            {config.name} provides a web-based platform that allows users to [describe your service].
             We reserve the right to modify, suspend, or discontinue the service at any time without notice.
           </p>
         </section>
@@ -68,7 +71,7 @@ export default function TermsOfServicePage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Intellectual Property</h2>
           <p className="text-muted-foreground leading-relaxed">
-            The service and its original content, features, and functionality are owned by Your Company
+            The service and its original content, features, and functionality are owned by {config.name}
             and are protected by international copyright, trademark, patent, trade secret, and other
             intellectual property laws.
           </p>
@@ -119,7 +122,7 @@ export default function TermsOfServicePage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Limitation of Liability</h2>
           <p className="text-muted-foreground leading-relaxed uppercase text-sm">
-            In no event shall Your Company, its directors, employees, partners, agents, suppliers,
+            In no event shall {config.name}, its directors, employees, partners, agents, suppliers,
             or affiliates be liable for any indirect, incidental, special, consequential, or punitive
             damages, including without limitation, loss of profits, data, use, goodwill, or other
             intangible losses.
@@ -129,7 +132,7 @@ export default function TermsOfServicePage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Indemnification</h2>
           <p className="text-muted-foreground leading-relaxed">
-            You agree to defend, indemnify, and hold harmless Your Company and its affiliates from any
+            You agree to defend, indemnify, and hold harmless {config.name} and its affiliates from any
             claims, damages, obligations, losses, liabilities, costs, or expenses arising from your
             use of the service or violation of these Terms.
           </p>
@@ -173,8 +176,8 @@ export default function TermsOfServicePage() {
           </p>
           <p className="text-muted-foreground">
             Email:{' '}
-            <a href="mailto:legal@yourcompany.com" className="text-primary hover:underline">
-              legal@yourcompany.com
+            <a href={`mailto:${config.contact.legalEmail ?? 'legal@example.com'}`} className="text-primary hover:underline">
+              {config.contact.legalEmail ?? 'legal@example.com'}
             </a>
           </p>
         </section>
