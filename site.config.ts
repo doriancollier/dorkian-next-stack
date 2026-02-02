@@ -17,7 +17,7 @@ export const siteConfig: SiteConfig = {
   // Social Links (optional)
   links: {
     twitter: undefined,
-    github: undefined,
+    github: 'https://github.com/doriancollier/dorkian-next-stack',
     linkedin: undefined,
   },
 

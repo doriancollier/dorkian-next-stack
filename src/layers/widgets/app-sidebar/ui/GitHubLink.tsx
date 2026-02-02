@@ -3,12 +3,15 @@
 import Link from 'next/link'
 import { Github } from 'lucide-react'
 import { SidebarMenuButton } from '@/components/ui/sidebar'
-
-const GITHUB_URL = 'https://github.com/doriancollier/dorkian-next-stack'
+import { baseConfig as siteConfig } from '@/config'
 
 export function GitHubLink() {
+  const githubUrl = siteConfig.links.github
+
+  if (!githubUrl) return null
+
   return (
-    <SidebarMenuButton render={<Link href={GITHUB_URL} target="_blank" />} tooltip="View on GitHub">
+    <SidebarMenuButton render={<Link href={githubUrl} target="_blank" />} tooltip="View on GitHub">
       <Github className="size-4" />
       <span className="group-data-[collapsible=icon]:hidden">GitHub</span>
     </SidebarMenuButton>
