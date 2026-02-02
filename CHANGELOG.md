@@ -10,11 +10,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Enhance system landing page with world-class design
-
 ### Changed
 
 ### Fixed
+
+---
+
+## [0.2.0-alpha.9] - 2026-02-02
+
+### Added
+
+- Enhance system landing page with world-class design
 
 ---
 
