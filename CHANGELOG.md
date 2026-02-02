@@ -10,13 +10,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Add template update system for upstream synchronization
-
 ### Changed
 
 ### Fixed
 
+---
+
+## [0.2.0-alpha.10] - 2026-02-02
+
+### Added
+
+- Add template update system for upstream synchronization
+
+### Fixed
+
 - Make workflow visual more compact to prevent overflow
+
 ---
 
 ## [0.2.0-alpha.9] - 2026-02-02
