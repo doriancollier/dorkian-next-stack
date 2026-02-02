@@ -14,37 +14,38 @@ import { baseConfig as siteConfig } from '@/config'
 // CSS-based visual component for Autonomous Workflows
 function WorkflowVisual() {
   return (
-    <div className="relative w-full h-64 md:h-80">
+    <div className="relative w-full h-64 md:h-72 overflow-hidden">
       {/* Animated flow diagram */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex items-center gap-3 md:gap-6">
+      <div className="absolute inset-0 flex items-center justify-center px-4">
+        {/* Compact workflow pipeline */}
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
           {/* Phase nodes */}
           {['Ideate', 'Specify', 'Build', 'Test', 'Ship'].map((phase, i) => (
-            <div key={phase} className="flex items-center gap-3 md:gap-6">
+            <div key={phase} className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <div
                 className="relative group"
                 style={{ animationDelay: `${i * 200}ms` }}
               >
                 <div
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5
+                  className="w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl bg-gradient-to-br from-primary/20 to-primary/5
                             border border-primary/20 flex items-center justify-center
                             group-hover:from-primary/30 group-hover:to-primary/10 transition-all duration-300
                             shadow-soft"
                 >
-                  <span className="text-xs md:text-sm font-medium text-primary">
+                  <span className="text-[10px] sm:text-xs md:text-sm font-medium text-primary">
                     {phase}
                   </span>
                 </div>
                 {/* Pulse effect */}
                 <div
-                  className="absolute inset-0 rounded-xl bg-primary/10 animate-ping opacity-0
+                  className="absolute inset-0 rounded-lg md:rounded-xl bg-primary/10 animate-ping opacity-0
                               group-hover:opacity-100"
                   style={{ animationDuration: '2s' }}
                 />
               </div>
               {/* Connector arrow */}
               {i < 4 && (
-                <ArrowRight className="size-4 md:size-5 text-primary/40 flex-shrink-0" />
+                <ArrowRight className="size-3 sm:size-3.5 md:size-4 text-primary/40 flex-shrink-0" />
               )}
             </div>
           ))}
