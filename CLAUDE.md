@@ -334,6 +334,10 @@ Detailed implementation patterns live in `developer-guides/`:
 | `08-styling-theming.md` | Tailwind v4, dark mode, Shadcn |
 | `09-authentication.md` | BetterAuth, sessions, OTP patterns |
 | `10-metadata-seo.md` | Metadata API, favicons, Open Graph, SEO |
+| `11-parallel-execution.md` | Parallel agent execution, background agents, batch scheduling |
+| `12-site-configuration.md` | Site configuration, feature toggles, env overrides |
+| `13-autonomous-roadmap-execution.md` | **Novel Feature** — Autonomous workflow execution, self-correction |
+| `14-template-updates.md` | Template update system, version tracking, conflict resolution |
 
 ### Keeping Guides Up to Date
 
@@ -1122,6 +1126,24 @@ This parses the tasks.md file and creates any missing tasks in the task system.
 | Command | Purpose |
 |---------|---------|
 | `/changelog:backfill` | Populate [Unreleased] from commits since last tag |
+
+#### Template
+
+| Command | Purpose |
+|---------|---------|
+| `/template:check` | Check for available upstream template updates |
+| `/template:update` | Update project from upstream template with selective file updates |
+
+**Key flags for `/template:update`:**
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Preview changes without applying them |
+| `--verbose` | Show detailed diff information |
+| `--version <tag>` | Update to specific version (default: latest) |
+| `--force` | Skip user confirmations (use with caution) |
+
+**Full documentation:** `developer-guides/14-template-updates.md`
 
 #### Roadmap
 

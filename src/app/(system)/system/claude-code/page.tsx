@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 
 const harnessStats = [
-  { label: 'Commands', value: '45', icon: Terminal },
+  { label: 'Commands', value: '49', icon: Terminal },
   { label: 'Agents', value: '7', icon: Bot },
   { label: 'Skills', value: '13', icon: Sparkles },
   { label: 'Rules', value: '5', icon: Shield },
@@ -82,6 +82,11 @@ const commandNamespaces = [
     namespace: 'cc/',
     description: 'Claude Code configuration',
     commands: ['notify:on', 'notify:off', 'notify:status', 'ide:set', 'ide:reset'],
+  },
+  {
+    namespace: 'template/',
+    description: 'Upstream template management',
+    commands: ['check', 'update'],
   },
 ]
 
@@ -366,7 +371,7 @@ export default function ClaudeCodePage() {
           Commands
         </h2>
         <p className="text-sm text-muted-foreground">
-          43 slash commands organized by namespace. Type{' '}
+          49 slash commands organized by namespace. Type{' '}
           <code className="bg-muted px-1 py-0.5 rounded text-xs">/command</code>{' '}
           in Claude Code to invoke.
         </p>

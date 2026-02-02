@@ -23,6 +23,7 @@ This file maps code areas to their relevant developer guides. It serves three pu
 | [11-parallel-execution.md](./11-parallel-execution.md) | Parallel agent execution, background agents, batch scheduling | `.claude/commands/**`, `.claude/skills/**`, `Task(`, `TaskOutput(` |
 | [12-site-configuration.md](./12-site-configuration.md) | Site configuration, feature toggles, env overrides | `site.config.ts`, `src/config/**` |
 | [13-autonomous-roadmap-execution.md](./13-autonomous-roadmap-execution.md) | **⭐ Novel Feature** — Autonomous workflow execution, /roadmap:work, /roadmap:next, self-correction | `.claude/commands/roadmap/**`, `.claude/scripts/hooks/autonomous-check.mjs`, `roadmap/scripts/update_workflow_state.py`, `roadmap/schema.json` |
+| [14-template-updates.md](./14-template-updates.md) | Template update system, /template:check, /template:update, version tracking | `.claude/commands/template/**`, `.claude/scripts/template-fetch.ts`, `.template.json`, `.claude/schemas/template-manifest.json` |
 
 ## Pattern Matching Reference
 
@@ -229,6 +230,26 @@ keywords:
   - "self-correction"
   - "human approval"
   - "checkpoint"
+
+# Guide: 14-template-updates.md
+patterns:
+  - ".claude/commands/template/**"
+  - ".claude/scripts/template-fetch.ts"
+  - ".template.json"
+  - ".claude/schemas/template-manifest.json"
+keywords:
+  - "/template:check"
+  - "/template:update"
+  - "template update"
+  - "upstream"
+  - "version tracking"
+  - "manifest"
+  - "user additions"
+  - "gray zone"
+  - "three-way diff"
+  - "marker-based"
+  - "template-section"
+  - "backup branch"
 ```
 
 ## Maintenance Tracking
@@ -248,6 +269,7 @@ keywords:
 | 11-parallel-execution.md | 2026-02-01 | Claude | Created: Parallel agent patterns, background agents, batch scheduling, context savings |
 | 12-site-configuration.md | 2026-02-01 | Claude | Created: Site configuration system, feature toggles, env overrides |
 | 13-autonomous-roadmap-execution.md | 2026-02-01 | Claude | **⭐ Novel Feature** — Complete autonomous workflow execution system with self-correction |
+| 14-template-updates.md | 2026-02-02 | Claude | Template update system — version tracking, selective updates, conflict resolution |
 
 ## How to Use This Index
 

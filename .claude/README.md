@@ -19,13 +19,13 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Commands | 45 | `.claude/commands/` |
+| Commands | 49 | `.claude/commands/` |
 | Agents | 7 | `.claude/agents/` |
 | Skills | 13 | `.claude/skills/` |
 | Rules | 5 | `.claude/rules/` |
 | Hooks | 8 | `.claude/settings.json` |
 | MCP Servers | 5 | `.mcp.json` |
-| Developer Guides | 11 + INDEX | `developer-guides/` |
+| Developer Guides | 14 + INDEX | `developer-guides/` |
 
 ## Component Types
 
@@ -46,6 +46,7 @@ Slash commands are triggered explicitly by typing `/command`. They're expanded p
 | `dev/` | scaffold | Feature scaffolding |
 | `cc/notify/` | on, off, status | Notification sounds |
 | `cc/ide/` | set, reset | VS Code color schemes |
+| `template/` | check, update | Upstream template updates |
 | root | ideate, ideate-to-spec, review-recent-work | Feature development |
 
 ### Agents (Tool-Invoked)
@@ -150,6 +151,9 @@ Detailed implementation patterns in `developer-guides/`:
 | `09-authentication.md` | BetterAuth, sessions, OTP patterns |
 | `10-metadata-seo.md` | Metadata API, favicons, Open Graph, SEO, AEO |
 | `11-parallel-execution.md` | Parallel agent execution patterns, batching, context savings |
+| `12-site-configuration.md` | Site configuration, feature toggles, env overrides |
+| `13-autonomous-roadmap-execution.md` | **⭐ Novel Feature** — Autonomous workflow, `/roadmap:work` |
+| `14-template-updates.md` | Template update system, `/template:check`, `/template:update` |
 
 Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
 
@@ -216,7 +220,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 ├── settings.json          # Hooks, permissions, environment
 ├── settings.local.json    # Local overrides, MCP servers
 │
-├── commands/              # Slash commands (44 total)
+├── commands/              # Slash commands (49 total)
 │   ├── app/               # Application maintenance
 │   ├── spec/              # Specification workflow
 │   ├── git/               # Version control
@@ -228,6 +232,9 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── cc/                # Claude Code configuration
 │   │   ├── notify/        # Notification sounds
 │   │   └── ide/           # IDE color schemes
+│   ├── template/          # Upstream template management
+│   │   ├── check.md       # Check for updates
+│   │   └── update.md      # Apply updates
 │   ├── ideate.md          # Feature ideation
 │   ├── ideate-to-spec.md  # Ideation → specification
 │   └── review-recent-work.md
