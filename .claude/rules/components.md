@@ -96,21 +96,29 @@ This project uses **Base UI** (via basecn) instead of Radix UI. Key differences:
   <Link href="/contact">Contact</Link>
 </Button>
 
-// CORRECT (Base UI pattern)
-// IMPORTANT: When render replaces button with non-button element (Link, div),
-// add nativeButton={false} to suppress console warnings
-<Button render={<Link href="/contact" />} nativeButton={false}>
+// CLIENT COMPONENTS: render prop works
+'use client'
+<Button render={<Link href="/contact" />}>
   Contact
 </Button>
 
-// With SidebarMenuButton (uses useRender, not Button primitive - no nativeButton needed)
+// SERVER COMPONENTS: Use plain Link with button styles (avoid render prop)
+// The render prop can cause "Element type is invalid" errors in Server Components
+<Link
+  href="/contact"
+  className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary text-primary-foreground shadow-xs hover:bg-primary/90"
+>
+  Contact
+</Link>
+
+// With SidebarMenuButton (Client Component - uses useRender)
 <SidebarMenuButton render={<Link href={item.href} />}>
   <Icon className="size-4" />
   <span>{item.label}</span>
 </SidebarMenuButton>
 ```
 
-**Why `nativeButton={false}`?** Base UI's Button assumes it renders a native `<button>` element. When using `render` to replace it with a Link (which renders as `<a>`), you must set `nativeButton={false}` to tell Base UI the element isn't a button. Otherwise you get: "A component that acts as a button was not rendered as a native `<button>`"
+**Server Component Limitation:** The `Button render={<Link .../>}` pattern can cause intermittent "Element type is invalid: expected a string...but got: undefined" errors in React Server Components. When building Server Components, use plain `<Link>` elements with Tailwind button classes instead.
 
 ### Type Workarounds
 

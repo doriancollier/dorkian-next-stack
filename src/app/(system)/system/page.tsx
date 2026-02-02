@@ -70,7 +70,7 @@ const featuredFeature = {
     { cmd: '/roadmap:next', desc: 'Get intelligent next item recommendation' },
     { cmd: '/roadmap:work <id>', desc: 'Start autonomous execution' },
   ],
-  guideHref: '/developer-guides/13-autonomous-roadmap-execution.md',
+  guideHref: '/system/guides/13-autonomous-roadmap-execution',
   roadmapHref: '/roadmap',
 }
 
@@ -97,38 +97,38 @@ const developerGuides = [
   {
     title: 'Autonomous Execution',
     description: '⭐ Novel — Full workflow automation',
-    href: '/developer-guides/13-autonomous-roadmap-execution.md',
+    href: '/system/guides/13-autonomous-roadmap-execution',
     icon: Bot,
     featured: true,
   },
   {
     title: 'Project Structure',
     description: 'FSD architecture, file naming, directory layout',
-    href: '/developer-guides/01-project-structure.md',
+    href: '/system/guides/01-project-structure',
     icon: Layers,
   },
   {
     title: 'Database & Prisma',
     description: 'Prisma 7, DAL patterns, naming conventions',
-    href: '/developer-guides/03-database-prisma.md',
+    href: '/system/guides/03-database-prisma',
     icon: Database,
   },
   {
     title: 'Forms & Validation',
     description: 'React Hook Form + Zod + Shadcn Form',
-    href: '/developer-guides/04-forms-validation.md',
+    href: '/system/guides/04-forms-validation',
     icon: FileCode,
   },
   {
     title: 'Data Fetching',
     description: 'TanStack Query patterns, mutations',
-    href: '/developer-guides/05-data-fetching.md',
+    href: '/system/guides/05-data-fetching',
     icon: Zap,
   },
   {
     title: 'Authentication',
     description: 'BetterAuth with Email OTP, session management',
-    href: '/developer-guides/09-authentication.md',
+    href: '/system/guides/09-authentication',
     icon: KeyRound,
   },
 ]
@@ -336,24 +336,20 @@ export default function SystemPage() {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 pt-2">
-            <Button render={<Link href={featuredFeature.roadmapHref} />} nativeButton={false}>
-              <Play className="mr-2 size-4" />
-              Open Roadmap
-            </Button>
-            <Button
-              variant="outline"
-              render={
-                <a
-                  href={featuredFeature.guideHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-              nativeButton={false}
+            <Link
+              href={featuredFeature.roadmapHref}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary text-primary-foreground shadow-xs hover:bg-primary/90"
             >
-              <BookOpen className="mr-2 size-4" />
+              <Play className="size-4" />
+              Open Roadmap
+            </Link>
+            <Link
+              href={featuredFeature.guideHref}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground"
+            >
+              <BookOpen className="size-4" />
               Read Full Guide
-            </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -403,18 +399,16 @@ export default function SystemPage() {
         </p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {developerGuides.map((guide) => (
-            <a
+            <Link
               key={guide.href}
               href={guide.href}
-              target="_blank"
-              rel="noopener noreferrer"
               className={`group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-accent ${
                 'featured' in guide && guide.featured
                   ? 'bg-primary/5 border-primary/20 hover:bg-primary/10'
                   : 'bg-card'
               }`}
             >
-              <guide.icon
+              <BookOpen
                 className={`size-4 mt-0.5 shrink-0 ${
                   'featured' in guide && guide.featured
                     ? 'text-primary'
@@ -433,13 +427,16 @@ export default function SystemPage() {
                   {guide.description}
                 </p>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
-        <Button variant="outline" size="sm" render={<a href="/developer-guides" target="_blank" rel="noopener noreferrer" />} nativeButton={false}>
+        <Link
+          href="/system/guides"
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-8 px-3 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground"
+        >
           View All Guides
-          <ArrowRight className="ml-2 size-3" />
-        </Button>
+          <ArrowRight className="size-3" />
+        </Link>
       </div>
 
       {/* Tech Stack */}
