@@ -10,11 +10,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Render developer guides as HTML pages at /system/guides
-
 ### Changed
 
 ### Fixed
+
+---
+
+## [0.2.0-alpha.7] - 2026-02-01
+
+### Added
+
+- Render developer guides as HTML pages at /system/guides
 
 ---
 
