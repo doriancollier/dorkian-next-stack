@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { GitHubLink } from './GitHubLink'
 import { NavMain } from './NavMain'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -31,6 +32,9 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <GitHubLink />
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <ThemeToggle />
           </SidebarMenuItem>
